@@ -34,7 +34,8 @@ uclapython_PYTHON =                     \
 	cc1k.py                         \
 	cc1k_sos_pkt.py                 \
 	ieee802_15_4.py			\
-	ieee802_15_4_pkt.py
+	ieee802_15_4_pkt.py             \
+	crc16.py
 
 noinst_PYTHON = 			\
 	qa_ucla.py			

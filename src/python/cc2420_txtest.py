@@ -71,82 +71,9 @@ def pick_subdevice(u):
         return (1, 0)
     return (0, 0)
 
-class stats(object):
-    def __init__(self):
-        self.npkts = 0
-        self.nright = 0
-        
-    
-class oqpsk_rx_graph (gr.flow_graph):
-    def __init__(self, options, rx_callback):
+class transmit_path(gr.flow_graph):
+    def __init__(self, options):
         gr.flow_graph.__init__(self)
-        print "cordic_freq = %s" % (eng_notation.num_to_str (options.cordic_freq))
-
-
-        # ----------------------------------------------------------------
-
-        self.data_rate = options.data_rate
-        self.samples_per_symbol = 2
-        self.usrp_decim = int (64e6 / self.samples_per_symbol / self.data_rate)
-        self.fs = self.data_rate * self.samples_per_symbol
-        payload_size = 128             # bytes
-
-        print "data_rate = ", eng_notation.num_to_str(self.data_rate)
-        print "samples_per_symbol = ", self.samples_per_symbol
-        print "usrp_decim = ", self.usrp_decim
-        print "fs = ", eng_notation.num_to_str(self.fs)
-
-        u = usrp.source_c (0, self.usrp_decim)
-        if options.rx_subdev_spec is None:
-            options.rx_subdev_spec = pick_subdevice(u)
-        u.set_mux(usrp.determine_rx_mux_value(u, options.rx_subdev_spec))
-
-        subdev = usrp.selected_subdev(u, options.rx_subdev_spec)
-        print "Using RX d'board %s" % (subdev.side_and_name(),)
-        subdev.select_rx_antenna('RX2')
-
-        #u.set_rx_freq (0, -options.cordic_freq)
-        u.tune(0, subdev, options.cordic_freq)
-        u.set_pga(0, options.gain)
-        u.set_pga(1, options.gain)
-
-        filter_taps =  gr.firdes.low_pass (1,                   # gain
-                                           self.fs,             # sampling rate
-                                           self.data_rate / 2 * 1.1, # cutoff
-                                           self.data_rate,           # trans width
-                                           gr.firdes.WIN_HANN)
-
-        print "len = ", len (filter_taps)
-
-        #filter = gr.fir_filter_ccf (1, filter_taps)
-
-        # receiver
-        #self.file_sink = gr.file_sink(gr.sizeof_gr_complex, "/home/thomas/projects/sdr/gnuradio/gr-build/gr-ucla/src/python/oqpsk_synced_2sps.dat")
-        #self.connect(u, self.file_sink)
-        
-        #self.u = gr.file_source(gr.sizeof_gr_complex, "/media/ramdrive/oqpsk_receive_2sps.dat")
-        self.u = u
-        
-        #self.squelch = gr.simple_squelch_cc(50)
-
-        self.packet_receiver = ieee802_15_4_pkt.ieee802_15_4_demod_pkts(self,
-                                                                callback=rx_callback,
-                                                                sps=self.samples_per_symbol,
-                                                                symbol_rate=self.data_rate,
-                                                                threshold=-1)
-
-        self.squelch = gr.simple_squelch_cc(50)
-        #self.file_sink = gr.file_sink(gr.sizeof_gr_complex, "/dev/null")
-        self.connect(self.u, self.squelch, self.packet_receiver)
-        #self.connect(self.u, self.file_sink)
-        
-        #send a packet...
-
-
-
-class transmit_path:
-    def __init__(self, fg, options, subdev_spec=None, log_p=False):
-
         self.normal_gain = 16000
 
         self.u = usrp.sink_c()
@@ -165,18 +92,18 @@ class transmit_path:
         self.subdev = usrp.selected_subdev(self.u, options.tx_subdev_spec)
         print "Using TX d'board %s" % (self.subdev.side_and_name(),)
 
-        self.u.tune(0, self.subdev, options.cordic_freq)
+        self.u.tune(self.subdev._which, self.subdev, options.cordic_freq)
         self.u.set_pga(0, options.gain)
         self.u.set_pga(1, options.gain)
 
         # transmitter
-        self.packet_transmitter = ieee802_15_4_pkt.ieee802_15_4_mod_pkts(fg, spb=self._spb, msgq_limit=2)
+        self.packet_transmitter = ieee802_15_4_pkt.ieee802_15_4_mod_pkts(self, spb=self._spb, msgq_limit=2)
         self.gain = gr.multiply_const_cc (self.normal_gain)
         #self.filesink = gr.filesink_c('rx_test.dat')
 
         
         
-        fg.connect(self.packet_transmitter, self.gain, self.u)
+        self.connect(self.packet_transmitter, self.gain, self.u)
         #gr.hier_block.__init__(self, fg, None, None)
 
         self.set_gain(self.subdev.gain_range()[1])  # set max Tx gain
@@ -224,23 +151,6 @@ class transmit_path:
 
 def main ():
 
-    def rx_callback(ok, payload):
-        st.npkts += 1
-        if ok:
-            st.nright += 1
-        if len(payload) <= 16:
-            print "ok = %5r  %d/%d" % (ok, st.nright, st.npkts)
-            print "  payload: " + str(map(hex, map(ord, payload)))
-            print " ------------------------"
-        else:
-            (pktno,) = struct.unpack('!H', payload[0:2])
-            print "ok = %5r  pktno = %4d  len(payload) = %4d  %d/%d" % (ok, pktno, len(payload),
-                                                                        st.nright, st.npkts)
-            print "  payload: " + str(map(hex, map(ord, payload)))
-            print " ------------------------"
-
-        tx.send_pkt(struct.pack('BBBBBBBBBBBBBBBBBBBBBBBBB', 0x1, 0x8d, 0x8d, 0xff, 0xff, 0x02, 0x0, 0x22, 0x12, 0xd6, 0x0, 0xff, 0xff, 0x8e, 0xff, 0xff, 0x0, 0x0, 0x0, 0xd6, 0x0, 0x15, 0x0, 0x0, 0x0))
-
         
     parser = OptionParser (option_class=eng_option)
     parser.add_option("-R", "--rx-subdev-spec", type="subdev", default=None,
@@ -258,12 +168,14 @@ def main ():
     
     (options, args) = parser.parse_args ()
 
-    st = stats()
-
-    fg = oqpsk_rx_graph(options, rx_callback)
-    tx = transmit_path(fg, options)
+    fg = transmit_path(options)
     fg.start()
     start = time.time()
+    
+    for i in range(100):
+        #raw_input ('Press Enter to send a packet: ')
+        fg.send_pkt(struct.pack('BBBBBBBBBBBBBBBBBBBBBBBBB', 0x1, 0x8d, 0x8d, 0xff, 0xff, 0x02, 0x0, 0x22, 0x12, 0xd6, 0x0, 0xff, 0xff, 0x8e, 0xff, 0xff, 0x0, 0x0, 0x0, 0xd6, 0x0, 0x15, 0x0, 0x0, 0x0))
+
 
     fg.wait()
 

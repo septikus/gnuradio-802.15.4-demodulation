@@ -142,86 +142,6 @@ class oqpsk_rx_graph (gr.flow_graph):
         
         #send a packet...
 
-
-
-class transmit_path:
-    def __init__(self, fg, options, subdev_spec=None, log_p=False):
-
-        self.normal_gain = 16000
-
-        self.u = usrp.sink_c()
-        dac_rate = self.u.dac_rate();
-        self._data_rate = 2000000
-        self._spb = 2
-        self._interp = int(128e6 / self._spb / self._data_rate)
-        self.fs = 128e6 / self._interp
-
-        self.u.set_interp_rate(self._interp)
-
-        # determine the daughterboard subdevice we're using
-        if options.tx_subdev_spec is None:
-            options.tx_subdev_spec = usrp.pick_tx_subdevice(self.u)
-        self.u.set_mux(usrp.determine_tx_mux_value(self.u, options.tx_subdev_spec))
-        self.subdev = usrp.selected_subdev(self.u, options.tx_subdev_spec)
-        print "Using TX d'board %s" % (self.subdev.side_and_name(),)
-
-        self.u.tune(0, self.subdev, options.cordic_freq)
-        self.u.set_pga(0, options.gain)
-        self.u.set_pga(1, options.gain)
-
-        # transmitter
-        self.packet_transmitter = ieee802_15_4_pkt.ieee802_15_4_mod_pkts(fg, spb=self._spb, msgq_limit=2)
-        self.gain = gr.multiply_const_cc (self.normal_gain)
-        #self.filesink = gr.filesink_c('rx_test.dat')
-
-        
-        
-        fg.connect(self.packet_transmitter, self.gain, self.u)
-        #gr.hier_block.__init__(self, fg, None, None)
-
-        self.set_gain(self.subdev.gain_range()[1])  # set max Tx gain
-        #self.set_auto_tr(True)                      # enable Auto Transmit/Receive switching
-
-    def set_freq(self, target_freq):
-        """
-        Set the center frequency we're interested in.
-
-        @param target_freq: frequency in Hz
-        @rypte: bool
-
-        Tuning is a two step process.  First we ask the front-end to
-        tune as close to the desired frequency as it can.  Then we use
-        the result of that operation and our target_frequency to
-        determine the value for the digital up converter.  Finally, we feed
-        any residual_freq to the s/w freq translater.
-        """
-        r = self.u.tune(self.subdev._which, self.subdev, target_freq)
-        if r:
-            # Could use residual_freq in s/w freq translator
-            return True
-
-        return False
-
-    def set_gain(self, gain):
-        self.gain = gain
-        self.subdev.set_gain(gain)
-
-    def set_auto_tr(self, enable):
-        return self.subdev.set_auto_tr(enable)
-        
-    def send_pkt(self, payload='', eof=False):
-        return self.packet_transmitter.send_pkt(5, struct.pack("HHHH", 0xFFFF, 0xFFFF, 0x2, 0x2), payload, eof)
-        
-    def bitrate(self):
-        return self._bitrate
-
-    def spb(self):
-        return self._spb
-
-    def interp(self):
-        return self._interp
-
-
 def main ():
 
     def rx_callback(ok, payload):
@@ -239,16 +159,12 @@ def main ():
             print "  payload: " + str(map(hex, map(ord, payload)))
             print " ------------------------"
 
-        tx.send_pkt(struct.pack('BBBBBBBBBBBBBBBBBBBBBBBBB', 0x1, 0x8d, 0x8d, 0xff, 0xff, 0x02, 0x0, 0x22, 0x12, 0xd6, 0x0, 0xff, 0xff, 0x8e, 0xff, 0xff, 0x0, 0x0, 0x0, 0xd6, 0x0, 0x15, 0x0, 0x0, 0x0))
-
         
     parser = OptionParser (option_class=eng_option)
     parser.add_option("-R", "--rx-subdev-spec", type="subdev", default=None,
                       help="select USRP Rx side A or B (default=first one with a daughterboard)")
-    parser.add_option("-T", "--tx-subdev-spec", type="subdev", default=None,
-                      help="select USRP Tx side A or B (default=first one with a daughterboard)")
     parser.add_option ("-c", "--cordic-freq", type="eng_float", default=2475000000,
-                       help="set Tx cordic frequency to FREQ", metavar="FREQ")
+                       help="set rx cordic frequency to FREQ", metavar="FREQ")
     parser.add_option ("-r", "--data-rate", type="eng_float", default=2000000)
     parser.add_option ("-f", "--filename", type="string",
                        default="rx.dat", help="write data to FILENAME")
@@ -261,7 +177,6 @@ def main ():
     st = stats()
 
     fg = oqpsk_rx_graph(options, rx_callback)
-    tx = transmit_path(fg, options)
     fg.start()
     start = time.time()
 

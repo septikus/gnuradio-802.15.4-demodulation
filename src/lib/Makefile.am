@@ -64,6 +64,8 @@ _ucla_la_SOURCES = 			\
 	ucla_cc1k_correlator_cb.cc      \
 	ucla_sos_packet_sink.cc	        \
 	ucla_ieee802_15_4_packet_sink.cc	\
+	ucla_qpsk_modulator_fc.cc       \
+	ucla_symbols_to_chips_bi.cc     \
 	ucla_delay_cc.cc
 
 # magic flags
@@ -83,6 +85,8 @@ grinclude_HEADERS =			\
 	ucla_cc1k_correlator_cb.h       \
 	ucla_sos_packet_sink.h          \
 	ucla_ieee802_15_4_packet_sink.h       \
+	ucla_qpsk_modulator_fc.h        \
+	ucla_symbols_to_chips_bi.h      \
 	ucla_delay_cc.h
 
 

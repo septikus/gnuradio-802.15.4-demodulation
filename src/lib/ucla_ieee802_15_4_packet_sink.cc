@@ -41,6 +41,7 @@
 #include <gr_count_bits.h>
 
 #define VERBOSE 0
+#define VERBOSE2 1
 
 static const int DEFAULT_THRESHOLD = 0;  // detect access code with up to DEFAULT_THRESHOLD bits wrong
   // this is the mapping between chips and symbols if we do
@@ -137,6 +138,7 @@ ucla_ieee802_15_4_packet_sink::ucla_ieee802_15_4_packet_sink (gr_msg_queue_sptr 
     d_threshold(threshold == -1 ? DEFAULT_THRESHOLD : threshold)
 {
   d_sync_vector = 0xA7;
+  d_processed = 0;
 
   if ( VERBOSE )
     fprintf(stderr, "syncvec: %x\n", d_sync_vector),fflush(stderr);
@@ -157,6 +159,7 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
   
   if (VERBOSE)
     fprintf(stderr,">>> Entering state machine\n"),fflush(stderr);
+  d_processed += noutput_items;
 
   while (count<noutput_items) {
     switch(d_state) {
@@ -167,22 +170,26 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 
       while (count < noutput_items) {
 
+	//if(inbuf[count++] == 0.0)
+	//  continue;
+
+
 	if(slice(inbuf[count++]))
 	  d_shift_reg = (d_shift_reg << 1) | 1;
 	else
 	  d_shift_reg = d_shift_reg << 1;
 
 	if(d_preamble_cnt > 0){
-	  d_chip_cnt = (d_chip_cnt+1)%32;
+	  d_chip_cnt = d_chip_cnt+1;
 	}
 
 	if(d_preamble_cnt == 0){
 	  unsigned int threshold;
-	  threshold = gr_count_bits32((d_shift_reg&0x7FFFFFFF) ^ CHIP_MAPPING[0]);
+	  //threshold = gr_count_bits32((d_shift_reg&0x7FFFFFFF) ^ CHIP_MAPPING[0]);
 	  //if(threshold < 5)
 	  //  fprintf(stderr, "Threshold %d d_preamble_cnt: %d\n", threshold, d_preamble_cnt);
-	  if ( threshold <= d_threshold) {
-	    if (VERBOSE)
+	  if ((d_shift_reg&0xFFFFFF) == (CHIP_MAPPING[0]&0xFFFFFF)) {
+	    if (VERBOSE2)
 	      fprintf(stderr,"Found 0 in chip sequence\n"),fflush(stderr);	
 	    // we found a 0 in the chip sequence
 	    d_preamble_cnt+=1;
@@ -190,12 +197,15 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 	  }
 	} else {
 	  // we found the first 0, thus we only have to do the calculation every 32 chips
-	  if(d_chip_cnt%32 == 0){
+	  if(d_chip_cnt == 32){
+	    d_chip_cnt = 0;
 	    if(d_preamble_cnt < 8) {
-	      if (gr_count_bits32((d_shift_reg&0x7FFFFFFF) ^ CHIP_MAPPING[0]) <= d_threshold) {
-		if (VERBOSE)
-		  fprintf(stderr,"Found 0 in chip sequence\n"),fflush(stderr);	
+	      //if (gr_count_bits32((d_shift_reg&0x7FFFFFFF) ^ CHIP_MAPPING[0]) <= d_threshold) {
+	      if ((d_shift_reg&0x7FFFFFFF) == CHIP_MAPPING[0]) {
+		if (VERBOSE2)
+		  fprintf(stderr,"Found %d 0 in chip sequence\n", d_preamble_cnt),fflush(stderr);	
 		// we found a 0 in the chip sequence
+		d_packet_byte = 0;
 		d_preamble_cnt ++;
 	      } else {
 		if (VERBOSE)
@@ -208,11 +218,17 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 	    } else {
 	      // we found 8 zeros in the chip sequences check if we have the SFD
 	      if(d_packet_byte == 0) {
-		if (gr_count_bits32((d_shift_reg&0x7FFFFFFF) ^ CHIP_MAPPING[7]) <= d_threshold) {
+		if ((d_shift_reg&0x7FFFFFFF) == CHIP_MAPPING[0]) {
+		  if (VERBOSE2)
+		    fprintf(stderr,"Found %d 0 in chip sequence\n", d_preamble_cnt),fflush(stderr);	
+		  // we found an other 0 in the chip sequence
+		  d_packet_byte = 0;
+		  d_preamble_cnt ++;
+		} else if (gr_count_bits32((d_shift_reg&0x7FFFFFFF) ^ CHIP_MAPPING[7]) <= d_threshold) {
 		  d_packet_byte = 7<<4;
 		} else {
 		  // we are not in the synchronization header
-		  if (VERBOSE)
+		  if (VERBOSE2)
 		    fprintf(stderr, "Wrong first byte of SFD. %u\n", d_shift_reg), fflush(stderr);
 		  enter_search();
 		  break;
@@ -240,7 +256,7 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
       break;
 
     case STATE_HAVE_SYNC:
-      if (VERBOSE)
+      if (VERBOSE2)
 	fprintf(stderr,"Header Search bitcnt=%d, header=0x%08x\n", d_headerbitlen_cnt, d_header),
 	  fflush(stderr);
 
@@ -250,13 +266,14 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 	else
 	  d_shift_reg = d_shift_reg << 1;
 
-	d_chip_cnt = (d_chip_cnt+1)%32;
+	d_chip_cnt = d_chip_cnt+1;
 
-	if(d_chip_cnt == 0){
+	if(d_chip_cnt == 32){
+	  d_chip_cnt = 0;
 	  unsigned char c = decode_chips(d_shift_reg);
 	  if(c == 0xFF){
 	    // something is wrong. restart the search for a sync
-	    if(VERBOSE)
+	    if(VERBOSE2)
 	      fprintf(stderr, "Found a not valid chip sequence! %u\n", d_shift_reg), fflush(stderr);
 	      
 	    enter_search();
@@ -348,6 +365,9 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
     } // switch
 
   }   // while
+
+  //if(VERBOSE2)
+  //  fprintf(stderr, "Samples Processed: %d\n", d_processed), fflush(stderr);
 
   return noutput_items;
 }

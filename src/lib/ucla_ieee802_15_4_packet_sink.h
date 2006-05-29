@@ -70,10 +70,11 @@ private:
   int 		     d_packetlen;		// length of packet
   int		     d_packetlen_cnt;		// how many so far
   int		     d_payload_cnt;		// how many bytes in payload
-  
+  int                d_processed;
+
 protected:
   ucla_ieee802_15_4_packet_sink(gr_msg_queue_sptr target_queue,
-		       int threshold);
+				int threshold);
   
   void enter_search();
   void enter_have_sync();

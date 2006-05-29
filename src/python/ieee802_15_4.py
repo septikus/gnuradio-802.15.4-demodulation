@@ -33,7 +33,7 @@ from math import pi
 
 class ieee802_15_4_mod(gr.hier_block):
 
-    def __init__(self, fg, spb = 2, bt = 0.3):
+    def __init__(self, fg, spb = 2):
         """
 	Hierarchical block for cc1k FSK modulation.
 
@@ -44,26 +44,35 @@ class ieee802_15_4_mod(gr.hier_block):
 	@type fg: flow graph
 	@param spb: samples per baud >= 2
 	@type spb: integer
-	@param bt: Gaussian filter bandwidth * symbol time
-	@type bt: float
 	"""
         if not isinstance(spb, int) or spb < 2:
             raise TypeError, "sbp must be an integer >= 2"
         self.spb = spb
 
-	sensitivity = (pi / 2) / spb	# phase change per bit = pi / 2
+        bitsPerSymbol = 4
 
-	# Turn it into NRZ data.
-	self.nrz = gr.bytes_to_syms()
+        self.bitToSymbol = gr.packed_to_unpacked_bb(bitsPerSymbol, gr.GR_LSB_FIRST)
 
-	# FM modulation
-	self.fmmod = gr.frequency_modulator_fc(sensitivity)
+
+
+        self.symbolsToChips = ucla.symbols_to_chips_bi()
+        self.chipsToSymbols = gr.packed_to_unpacked_ii(1, gr.GR_LSB_FIRST)
+        self.symbolsToConstellation = gr.chunks_to_symbols_if((-1, 1))
+
 		
+	#self.nrz = gr.bytes_to_syms()
+        self.pskmod = ucla.qpsk_modulator_fc()
+        self.delay = ucla.delay_cc(self.spb)
+
+        #self.connect(self.null_source, self.bitToSymbol, self.symbolsToChips, self.chipsToSymbols,
+        #             self.symbolsToConstellation, self.pskmod, self.delay, gain, u)
+
 	# Connect
-	fg.connect(self.nrz, self.fmmod)
+	fg.connect(self.bitToSymbol, self.symbolsToChips, self.chipsToSymbols,
+                   self.symbolsToConstellation, self.pskmod, self.delay)
 
 	# Initialize base class
-	gr.hier_block.__init__(self, fg, self.nrz, self.fmmod)
+	gr.hier_block.__init__(self, fg, self.bitToSymbol, self.delay)
 
 
 class ieee802_15_4_demod(gr.hier_block):
