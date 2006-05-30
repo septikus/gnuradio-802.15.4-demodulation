@@ -50,7 +50,7 @@ class ieee802_15_4_mod(gr.hier_block):
         self.spb = spb
 
         self.symbolsToChips = ucla.symbols_to_chips_bi()
-        self.chipsToSymbols = gr.packed_to_unpacked_ii(1, gr.GR_LSB_FIRST)
+        self.chipsToSymbols = gr.packed_to_unpacked_ii(1, gr.GR_MSB_FIRST)
         self.symbolsToConstellation = gr.chunks_to_symbols_if((-1, 1))
 
 		
