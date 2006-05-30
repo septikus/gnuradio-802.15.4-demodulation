@@ -78,8 +78,11 @@ ucla_symbols_to_chips_bi::work (int noutput_items,
 
     // per stream processing
     for (int i = 0; i < noutput_items; i+=2){
-      memcpy(&out[i], &d_symbol_table[(unsigned int)((in[i]>>4)&0xF)], sizeof(unsigned int));
-      memcpy(&out[i+1], &d_symbol_table[(unsigned int)(in[i]&0xF)], sizeof(unsigned int));
+      //fprintf(stderr, "%x %x, ", in[i/2]&0xF, (in[i/2]>>4)&0xF), fflush(stderr);
+
+      // The LSBlock is sent first (802.15.4 standard)
+      memcpy(&out[i+1], &d_symbol_table[(unsigned int)((in[i/2]>>4)&0xF)], sizeof(unsigned int));
+      memcpy(&out[i], &d_symbol_table[(unsigned int)(in[i/2]&0xF)], sizeof(unsigned int));
     }
     // end of per stream processing
 

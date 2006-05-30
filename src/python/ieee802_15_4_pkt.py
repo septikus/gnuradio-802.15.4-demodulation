@@ -36,7 +36,7 @@ import struct
 
 MAX_PKT_SIZE = 128
 
-def make_ieee802_15_4_packet(FCF, seqNr, addressInfo, payload, pad_for_usrp=True, preambleLength=4, SFD=0x7A):
+def make_ieee802_15_4_packet(FCF, seqNr, addressInfo, payload, pad_for_usrp=True, preambleLength=4, SFD=0xA7):
     """
     Build a 802_15_4 packet
 

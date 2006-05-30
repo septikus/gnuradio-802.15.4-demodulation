@@ -53,7 +53,6 @@ class ieee802_15_4_mod(gr.hier_block):
         self.chipsToSymbols = gr.packed_to_unpacked_ii(1, gr.GR_MSB_FIRST)
         self.symbolsToConstellation = gr.chunks_to_symbols_if((-1, 1))
 
-		
 	#self.nrz = gr.bytes_to_syms()
         self.pskmod = ucla.qpsk_modulator_fc()
         self.delay = ucla.delay_cc(self.spb)
