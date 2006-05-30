@@ -49,12 +49,6 @@ class ieee802_15_4_mod(gr.hier_block):
             raise TypeError, "sbp must be an integer >= 2"
         self.spb = spb
 
-        bitsPerSymbol = 4
-
-        self.bitToSymbol = gr.packed_to_unpacked_bb(bitsPerSymbol, gr.GR_LSB_FIRST)
-
-
-
         self.symbolsToChips = ucla.symbols_to_chips_bi()
         self.chipsToSymbols = gr.packed_to_unpacked_ii(1, gr.GR_LSB_FIRST)
         self.symbolsToConstellation = gr.chunks_to_symbols_if((-1, 1))
@@ -68,11 +62,11 @@ class ieee802_15_4_mod(gr.hier_block):
         #             self.symbolsToConstellation, self.pskmod, self.delay, gain, u)
 
 	# Connect
-	fg.connect(self.bitToSymbol, self.symbolsToChips, self.chipsToSymbols,
+	fg.connect(self.symbolsToChips, self.chipsToSymbols,
                    self.symbolsToConstellation, self.pskmod, self.delay)
 
 	# Initialize base class
-	gr.hier_block.__init__(self, fg, self.bitToSymbol, self.delay)
+	gr.hier_block.__init__(self, fg, self.symbolsToChips, self.delay)
 
 
 class ieee802_15_4_demod(gr.hier_block):

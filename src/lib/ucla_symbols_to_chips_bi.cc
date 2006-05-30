@@ -60,7 +60,7 @@ ucla_symbols_to_chips_bi::ucla_symbols_to_chips_bi ()
   : gr_sync_interpolator ("symbols_to_chips_bi",
 			  gr_make_io_signature (1, -1, sizeof (unsigned char)),
 			  gr_make_io_signature (1, -1, sizeof (unsigned int)),
-			  1)
+			  2)
 {
 }
 
@@ -77,10 +77,9 @@ ucla_symbols_to_chips_bi::work (int noutput_items,
     unsigned int *out = (unsigned int *) output_items[m];
 
     // per stream processing
-    for (int i = 0; i < noutput_items; i++){
-      assert (((unsigned int)in[i]) < TABLE_SIZE);
-      memcpy(out, &d_symbol_table[(unsigned int)in[i]], sizeof(unsigned int));
-      out+=1;
+    for (int i = 0; i < noutput_items; i+=2){
+      memcpy(&out[i], &d_symbol_table[(unsigned int)((in[i]>>4)&0xF)], sizeof(unsigned int));
+      memcpy(&out[i+1], &d_symbol_table[(unsigned int)(in[i]&0xF)], sizeof(unsigned int));
     }
     // end of per stream processing
 
