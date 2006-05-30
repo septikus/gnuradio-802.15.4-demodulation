@@ -283,7 +283,7 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 	  }
 
 	  if(d_packet_byte_index == 0){
-	    d_packet_byte = c << 4;
+	    d_packet_byte = c;
 	  } else {
 	    // c is always < 15
 	    d_packet_byte |= c << 4;
