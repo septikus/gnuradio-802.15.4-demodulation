@@ -103,7 +103,7 @@ class oqpsk_rx_graph (gr.flow_graph):
 
         subdev = usrp.selected_subdev(u, options.rx_subdev_spec)
         print "Using RX d'board %s" % (subdev.side_and_name(),)
-        subdev.select_rx_antenna('RX2')
+        #subdev.select_rx_antenna('RX2')
 
         #u.set_rx_freq (0, -options.cordic_freq)
         u.tune(0, subdev, options.cordic_freq)

@@ -218,13 +218,15 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 	    } else {
 	      // we found 8 zeros in the chip sequences check if we have the SFD
 	      if(d_packet_byte == 0) {
-		if ((d_shift_reg&0x7FFFFFFF) == CHIP_MAPPING[0]) {
+		if ((d_shift_reg&0x7FFFFFFF) == CHIP_MAPPING[0]) {	
 		  if (VERBOSE2)
 		    fprintf(stderr,"Found %d 0 in chip sequence\n", d_preamble_cnt),fflush(stderr);	
 		  // we found an other 0 in the chip sequence
 		  d_packet_byte = 0;
 		  d_preamble_cnt ++;
 		} else if (gr_count_bits32((d_shift_reg&0x7FFFFFFF) ^ CHIP_MAPPING[7]) <= d_threshold) {
+		  if (VERBOSE2)
+		    fprintf(stderr,"Found first SFD\n", d_preamble_cnt),fflush(stderr);	
 		  d_packet_byte = 7<<4;
 		} else {
 		  // we are not in the synchronization header
@@ -235,10 +237,10 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 		}
 	      } else {
 		if (gr_count_bits32((d_shift_reg&0x7FFFFFFF) ^ CHIP_MAPPING[10]) <= d_threshold) {
-		  if (VERBOSE)
-		    fprintf(stderr,"Found sync\n"),fflush(stderr);	
+		  d_packet_byte |= 0xA;
+		  if (VERBOSE2)
+		    fprintf(stderr,"Found sync, 0x%x\n", d_packet_byte),fflush(stderr);	
 		  // found SDF
-		  d_packet_byte = 0xA<<4;
 		  // setup for header decode
 		  enter_have_sync();
 		  break;
@@ -281,7 +283,7 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 	  }
 
 	  if(d_packet_byte_index == 0){
-	    d_packet_byte = c;
+	    d_packet_byte = c << 4;
 	  } else {
 	    // c is always < 15
 	    d_packet_byte |= c << 4;
@@ -302,8 +304,8 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
       break;
       
     case STATE_HAVE_HEADER:
-      if (VERBOSE)
-	fprintf(stderr,"Packet Build count=%d, noutput_items=%d\n", count, noutput_items),fflush(stderr);
+      if (VERBOSE2)
+	fprintf(stderr,"Packet Build count=%d, noutput_items=%d, packet_len=%d\n", count, noutput_items, d_packetlen),fflush(stderr);
 
       while (count < noutput_items) {   // shift bits into bytes of packet one at a time
 	if(slice(inbuf[count++]))
@@ -317,7 +319,7 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 	  unsigned char c = decode_chips(d_shift_reg);
 	  if(c == 0xff){
 	    // something is wrong. restart the search for a sync
-	    if(VERBOSE)
+	    if(VERBOSE2)
 	      fprintf(stderr, "Found a not valid chip sequence! %u\n", d_shift_reg), fflush(stderr);
 
 	    enter_search();
@@ -334,7 +336,7 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 	  d_packet_byte_index = d_packet_byte_index + 1;
 	  if(d_packet_byte_index%2 == 0){
 	    // we have a complete byte
-	    if (VERBOSE)
+	    if (VERBOSE2)
 	      fprintf(stderr, "packetcnt: %d, payloadcnt: %d, payload 0x%x, d_packet_byte_index: %d\n", d_packetlen_cnt, d_payload_cnt, d_packet_byte, d_packet_byte_index), fflush(stderr);
 
 	    d_packet[d_packetlen_cnt++] = d_packet_byte;
@@ -349,7 +351,7 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 
 	      d_target_queue->insert_tail(msg);		// send it
 	      msg.reset();  				// free it up
-	      if(VERBOSE)
+	      if(VERBOSE2)
 		fprintf(stderr, "Adding message of size %d to queue\n", d_packetlen_cnt);
 	      enter_search();
 	      break;
