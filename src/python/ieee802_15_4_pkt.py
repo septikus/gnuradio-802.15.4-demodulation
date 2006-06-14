@@ -210,8 +210,8 @@ class ieee802_15_4_demod_pkts(gr.hier_block):
         self._packet_sink = ucla.ieee802_15_4_packet_sink(self._rcvd_pktq, threshold)
         
         fg.connect(self.ieee802_15_4_demod, self._packet_sink)
-        filesink = gr.file_sink (gr.sizeof_float, "/tmp/rx.log")
-        fg.connect(self.ieee802_15_4_demod,filesink)
+        #filesink = gr.file_sink (gr.sizeof_float, "/tmp/rx.log")
+        #fg.connect(self.ieee802_15_4_demod,filesink)
       
         gr.hier_block.__init__(self, fg, self.ieee802_15_4_demod, None)
         self._watcher = _queue_watcher_thread(self._rcvd_pktq, callback)

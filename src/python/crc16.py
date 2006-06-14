@@ -1,14 +1,9 @@
 #!/usr/bin/env python
 
-# crc16.py by Bryan G. Olson, 2005
-# This module is free software and may be used and
-# distributed under the same terms as Python itself.
-
 """
-     CRC-16 in Python, as standard as possible. This is
-     the 'reflected' version, which is usually what people
-     want. See Ross N. Williams' /A Painless Guide to
-     CRC error detection algorithms/.
+ Translation from a C code posted to a forum on the Internet.
+
+ @translator Thomas Schmid
 """
 
 from array import array
