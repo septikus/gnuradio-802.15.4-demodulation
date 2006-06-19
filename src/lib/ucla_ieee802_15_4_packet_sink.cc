@@ -41,9 +41,9 @@
 #include <gr_count_bits.h>
 
 #define VERBOSE 0
-#define VERBOSE2 1
+#define VERBOSE2 0
 
-static const int DEFAULT_THRESHOLD = 0;  // detect access code with up to DEFAULT_THRESHOLD bits wrong
+static const int DEFAULT_THRESHOLD = 3;  // detect access code with up to DEFAULT_THRESHOLD bits wrong
   // this is the mapping between chips and symbols if we do
   // a fm demodulation of the O-QPSK signal. Note that this
   // is different than the O-QPSK chip sequence from the
