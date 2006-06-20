@@ -40,10 +40,13 @@
 #include <stdexcept>
 #include <gr_count_bits.h>
 
+// very verbose output for almost each sample
 #define VERBOSE 0
+// less verbose output for higher level debugging
 #define VERBOSE2 0
 
 static const int DEFAULT_THRESHOLD = 3;  // detect access code with up to DEFAULT_THRESHOLD bits wrong
+
   // this is the mapping between chips and symbols if we do
   // a fm demodulation of the O-QPSK signal. Note that this
   // is different than the O-QPSK chip sequence from the
@@ -368,8 +371,8 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 
   }   // while
 
-  //if(VERBOSE2)
-  //  fprintf(stderr, "Samples Processed: %d\n", d_processed), fflush(stderr);
+  if(VERBOSE2)
+    fprintf(stderr, "Samples Processed: %d\n", d_processed), fflush(stderr);
 
   return noutput_items;
 }

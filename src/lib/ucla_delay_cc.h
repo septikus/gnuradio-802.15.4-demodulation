@@ -34,18 +34,12 @@ typedef boost::shared_ptr<ucla_delay_cc> ucla_delay_cc_sptr;
 ucla_delay_cc_sptr ucla_make_delay_cc (const int delay);
 
 /*!
- * \brief Filter-Delay Combination Block.
- * \ingroup filter
+ * \brief Delay Block.
+ * \ingroup ucla
  *
- * The block takes one or two float stream and outputs a complex
- * stream. If only one float stream is input, the real output is
- * a delayed version of this input and the imaginary output is the
- * filtered output. If two floats are connected to the input, then
- * the real output is the delayed version of the first input, and
- * the imaginary output is the filtered output. The delay in the 
- * real path accounts for the group delay introduced by the filter
- * in the imaginary path. The filter taps needs to be calculated
- * before initializing this block.
+ * The block takes one complex stream as input and outputs a complex
+ * stream where the Q-Phase is delayed by delay. This can be used to
+ * transform a QPSK signal to a O-QPSK one.
  *
  */
 class ucla_delay_cc : public gr_sync_block

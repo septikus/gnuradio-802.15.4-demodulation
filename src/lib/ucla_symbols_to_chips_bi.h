@@ -20,8 +20,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-// WARNING: this file is machine generated.  Edits will be over written
-
 #ifndef INCLUDED_UCLA_SYMBOLS_TO_CHIPS_BI_H
 #define INCLUDED_UCLA_SYMBOLS_TO_CHIPS_BI_H
 
@@ -33,33 +31,20 @@ typedef boost::shared_ptr<ucla_symbols_to_chips_bi> ucla_symbols_to_chips_bi_spt
 ucla_symbols_to_chips_bi_sptr ucla_make_symbols_to_chips_bi ();
 
 /*!
- * \brief Map a stream of symbol indexes (unpacked bytes or shorts) to stream of float or complex onstellation points.in \p D dimensions (\p D = 1 by default)
- * \ingroup block
+ * \brief Map a stream of symbol indexes (unpacked bytes) to stream of unsigned integers
+ * \ingroup ucla
  *
- * input: stream of unsigned char; output: stream of float
+ * input: stream of unsigned char; output: stream of int
  *
- * out[n D + k] = symbol_table[in[n] D + k], k=0,1,...,D-1
- *
- * The combination of gr_packed_to_unpacked_XX followed by
- * gr_chunks_to_symbols_XY handles the general case of mapping 
- * from a stream of bytes or shorts into arbitrary float
- * or complex symbols.
- *
- * \sa gr_packed_to_unpacked_bb, gr_unpacked_to_packed_bb,
- * \sa gr_packed_to_unpacked_ss, gr_unpacked_to_packed_ss,
- * \sa gr_symbols_to_chips_bi, gr_chunks_to_symbols_bc.
- * \sa gr_chunks_to_symbols_sf, gr_chunks_to_symbols_sc.
  */
 
 class ucla_symbols_to_chips_bi : public gr_sync_interpolator
 {
   friend ucla_symbols_to_chips_bi_sptr ucla_make_symbols_to_chips_bi ();
 
-  //std::vector<long> d_symbol_table;
   ucla_symbols_to_chips_bi ();
 
  public:
-  //std::vector<unsigned int> symbol_table () const { return d_symbol_table; }
   int work (int noutput_items,
 	    gr_vector_const_void_star &input_items,
 	    gr_vector_void_star &output_items);
