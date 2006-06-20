@@ -40,8 +40,22 @@ def make_ieee802_15_4_packet(FCF, seqNr, addressInfo, payload, pad_for_usrp=True
     """
     Build a 802_15_4 packet
 
-    @param payload:
-    @param pad_for_usrp:
+    @param FCF: 2 bytes defining the type of frame.
+    @type FCF: string
+    @param seqNr: 1 byte sequence number.
+    @type seqNr: byte
+    @param addressInfo: 0 to 20 bytes of address information.
+    @type addressInfo: string
+    @param payload: The payload of the packet. The maximal size of the message
+    can not be larger than 128.
+    @type payload: string
+    @param pad_for_usrp: If we should add 0s at the end to pad for the USRP.
+    @type pad_for_usrp: boolean
+    @param preambleLength: Length of the preambble. Currently ignored.
+    @type preambleLength: int
+    @param SFD: Start of frame describtor. This is by default set to the IEEE 802.15.4 standard,
+    but can be changed if required.
+    @type SFD: byte
     """
 
     if len(FCF) != 2:
@@ -61,14 +75,12 @@ def make_ieee802_15_4_packet(FCF, seqNr, addressInfo, payload, pad_for_usrp=True
     crc.update(MPDU)
 
     FCS = struct.pack("H", crc.intchecksum())
-    #FCS = struct.pack("BB", 0x82, 0x2)
-
 
     pkt = ''.join((SHR, PHR, MPDU, FCS))
 
     if pad_for_usrp:
         # note that we have 16 samples which go over the USB for each bit
-        pkt = pkt + (_npadding_bytes(len(pkt), 16) * '\x00')+100*'\x00'
+        pkt = pkt + (_npadding_bytes(len(pkt), 8) * '\x00')+100*'\x00'
 
     return pkt
 
@@ -126,7 +138,7 @@ def make_FCF(frameType=1, securityEnabled=0, framePending=0, acknowledgeRequest=
 
 class ieee802_15_4_mod_pkts(gr.hier_block):
     """
-    CC1K modulator that is a GNU Radio source.
+    IEEE 802.15.4 modulator that is a GNU Radio source.
 
     Send packets by calling send_pkt
     """
@@ -139,8 +151,6 @@ class ieee802_15_4_mod_pkts(gr.hier_block):
 
 	@param fg: flow graph
 	@type fg: flow graph
-        @param access_code: 64-bit sync code
-        @type access_code: string of length 8
         @param msgq_limit: maximum number of messages in message queue
         @type msgq_limit: int
         @param pad_for_usrp: If true, packets are padded such that they end up a multiple of 128 samples
@@ -159,13 +169,17 @@ class ieee802_15_4_mod_pkts(gr.hier_block):
         """
         Send the payload.
 
+        @param seqNr: sequence number of packet
+        @type seqNr: byte
+        @param addressInfo: address information for packet
+        @type addressInfo: string
         @param payload: data to send
         @type payload: string
         """
+        
         if eof:
             msg = gr.message(1) # tell self.pkt_input we're not sending any more packets
         else:
-            # print "original_payload =", string_to_hex_list(payload)
             FCF = make_FCF()
             
             pkt = make_ieee802_15_4_packet(FCF,
@@ -195,14 +209,12 @@ class ieee802_15_4_demod_pkts(gr.hier_block):
 
 	@param fg: flow graph
 	@type fg: flow graph
-        @param access_code: 64-bit sync code
-        @type access_code: string of length 8
         @param callback:  function of two args: ok, payload
         @type callback: ok: bool; payload: string
         @param threshold: detect access_code with up to threshold bits wrong (-1 -> use default)
         @type threshold: int
 
-        See cc1k_demod for remaining parameters.
+        See ieee802_15_4_demod for remaining parameters.
 	"""
 
         self._rcvd_pktq = gr.msg_queue()          # holds packets from the PHY
@@ -210,8 +222,6 @@ class ieee802_15_4_demod_pkts(gr.hier_block):
         self._packet_sink = ucla.ieee802_15_4_packet_sink(self._rcvd_pktq, threshold)
         
         fg.connect(self.ieee802_15_4_demod, self._packet_sink)
-        #filesink = gr.file_sink (gr.sizeof_float, "/tmp/rx.log")
-        #fg.connect(self.ieee802_15_4_demod,filesink)
       
         gr.hier_block.__init__(self, fg, self.ieee802_15_4_demod, None)
         self._watcher = _queue_watcher_thread(self._rcvd_pktq, callback)
@@ -232,9 +242,6 @@ class _queue_watcher_thread(_threading.Thread):
         self.keep_running = True
         self.start()
 
-    #def stop(self):
-    #    self.keep_running = False
-        
     def run(self):
         while self.keep_running:
             print "802_15_4_pkt: waiting for packet"
@@ -243,24 +250,6 @@ class _queue_watcher_thread(_threading.Thread):
             payload = msg.to_string()
             
             print "received packet "
-            #am_group = ord(payload[0])
-            #module_src = ord(payload[1])
-            #module_dst = ord(payload[2])
-            #dst_addr = ord(payload[4])*256 + ord(payload[3])
-            #src_addr = ord(payload[6])*256 + ord(payload[5])
-            #msg_type = ord(payload[7])
-            #msg_len = ord(payload[8])
-            #msg_payload = payload[9:9+msg_len]
-            #crc = ord(payload[-1])
-
-            #print " bare msg: " + str(map(hex, map(ord, payload)))
-            #print " am group: " + str(am_group)
-            #print "  src_addr: "+str(src_addr)+" dst_addr: "+str(dst_addr)
-            #print "  src_module: " + str(module_src) + " dst_module: " + str(module_dst)
-            #print "  msg type: " + str(msg_type) + " msg len: " +str(msg_len)
-            #print "  msg: " + str(map(hex, map(ord, msg_payload)))
-            #print "  crc: " + str(crc)
-            #print
 
             msg_payload = payload
             
