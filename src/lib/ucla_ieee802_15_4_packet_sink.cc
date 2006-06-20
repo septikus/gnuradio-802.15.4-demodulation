@@ -54,22 +54,22 @@ static const int DEFAULT_THRESHOLD = 3;  // detect access code with up to DEFAUL
   // happening.
   // See "CMOS RFIC Architectures for IEEE 802.15.4 Networks",
   // John Notor, Anthony Caviglia, Gary Levy, for more details.
-static const int CHIP_MAPPING[] = {1618456172,
-				   1309113062,
-				   1826650030,
-				   1724778362,
-				   778887287,
-				   2061946375,
-				   2007919840,
-				   125494990,
-				   529027475,
-				   838370585,
-				   320833617,
-				   422705285,
-				   1368596360,
-				   85537272,
-				   139563807,
-				   2021988657};
+static const unsigned int CHIP_MAPPING[] = {1618456172,
+					    1309113062,
+					    1826650030,
+					    1724778362,
+					    778887287,
+					    2061946375,
+					    2007919840,
+					    125494990,
+					    529027475,
+					    838370585,
+					    320833617,
+					    422705285,
+					    1368596360,
+					    85537272,
+					    139563807,
+					    2021988657};
 
 
 inline void
@@ -145,7 +145,6 @@ ucla_ieee802_15_4_packet_sink::ucla_ieee802_15_4_packet_sink (gr_msg_queue_sptr 
 
   if ( VERBOSE )
     fprintf(stderr, "syncvec: %x\n", d_sync_vector),fflush(stderr);
-
   enter_search();
 }
 
@@ -187,7 +186,7 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 	}
 
 	if(d_preamble_cnt == 0){
-	  unsigned int threshold;
+	  //unsigned int threshold;
 	  //threshold = gr_count_bits32((d_shift_reg&0x7FFFFFFF) ^ CHIP_MAPPING[0]);
 	  //if(threshold < 5)
 	  //  fprintf(stderr, "Threshold %d d_preamble_cnt: %d\n", threshold, d_preamble_cnt);
