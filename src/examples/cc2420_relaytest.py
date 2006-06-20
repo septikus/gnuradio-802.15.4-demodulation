@@ -1,43 +1,30 @@
 #!/usr/bin/env python
 
 #
-# Copyright (c) 2003 The Regents of the University of California.
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above
-#    copyright notice, this list of conditions and the following
-#    disclaimer in the documentation and/or other materials provided
-#    with the distribution.
-# 3. All advertising materials mentioning features or use of this
-#    software must display the following acknowledgement:
-#       This product includes software developed by Networked &
-#       Embedded Systems Lab at UCLA
-# 4. Neither the name of the University nor that of the Laboratory
-#    may be used to endorse or promote products derived from this
-#    software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS''
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS
-# OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
-# USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
-# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-# SUCH DAMAGE.
+# Copyright 2004,2006 Free Software Foundation, Inc.
+# 
+# This file is part of GNU Radio
+# 
+# GNU Radio is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+# 
+# GNU Radio is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with GNU Radio; see the file COPYING.  If not, write to
+# the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+# Boston, MA 02111-1307, USA.
 #
 
-
 #
-# Decoder of IEEE 802.15.4 RADIO Packets. 
+# This test example relays messages from one frequency to an other.
+# The default center frequencies are Channel 11 for receive and
+# channel 25 for send.
 #
 # Modified by: Thomas Schmid
 #
@@ -50,11 +37,6 @@ from gnuradio.ucla_blks import ieee802_15_4_pkt
 from gnuradio.eng_option import eng_option
 from optparse import OptionParser
 import math, struct, time
-
-#from gnuradio.wxgui import stdgui, fftsink, scopesink
-#import wx
-
-start = 0
 
 def pick_subdevice(u):
     """
@@ -70,12 +52,28 @@ def pick_subdevice(u):
     return (0, 0)
 
 class stats(object):
+    """
+    This class is used to keep statistics for received
+    packets.
+    """
     def __init__(self):
         self.npkts = 0
         self.nright = 0
 
 class oqpsk_rx_graph (gr.flow_graph):
+    """
+    This class connects the USRP source with the
+    IEEE 802.15.4 packet receiver. It needs a callback function
+    which will be called every time a packet is successfully
+    decoded. There is no check of any CRC done in here.
+
+    """
+    
     def __init__(self, options, rx_callback):
+        """
+        @param options Optparse option field for command line arguments.
+        @param rx_callback Callback function for the event when a packet is received.
+        """
         gr.flow_graph.__init__(self)
         print "cordic_freq = %s" % (eng_notation.num_to_str (options.cordic_freq_rx))
 
@@ -102,29 +100,11 @@ class oqpsk_rx_graph (gr.flow_graph):
         print "Using RX d'board %s" % (self.subdev.side_and_name(),)
         #self.subdev.select_rx_antenna('RX2')
 
-        #u.set_rx_freq (0, -options.cordic_freq_rx)
         u.tune(0, self.subdev, options.cordic_freq_rx)
         u.set_pga(0, options.gain)
         u.set_pga(1, options.gain)
 
-        filter_taps =  gr.firdes.low_pass (1,                   # gain
-                                           self.fs,             # sampling rate
-                                           self.data_rate / 2 * 1.1, # cutoff
-                                           self.data_rate,           # trans width
-                                           gr.firdes.WIN_HANN)
-
-        print "len = ", len (filter_taps)
-
-        #filter = gr.fir_filter_ccf (1, filter_taps)
-
-        # receiver
-        #self.file_sink = gr.file_sink(gr.sizeof_gr_complex, "/home/thomas/projects/sdr/gnuradio/gr-build/gr-ucla/src/python/oqpsk_synced_2sps.dat")
-        #self.connect(u, self.file_sink)
-        
-        #self.u = gr.file_source(gr.sizeof_gr_complex, "/media/ramdrive/oqpsk_receive_2sps.dat")
         self.u = u
-        
-        #self.squelch = gr.simple_squelch_cc(50)
 
         self.packet_receiver = ieee802_15_4_pkt.ieee802_15_4_demod_pkts(self,
                                                                 callback=rx_callback,
@@ -170,35 +150,11 @@ class transmit_path(gr.flow_graph):
         # transmitter
         self.packet_transmitter = ieee802_15_4_pkt.ieee802_15_4_mod_pkts(self, spb=self._spb, msgq_limit=2)
         self.gain = gr.multiply_const_cc (self.normal_gain)
-        #self.filesink = gr.filesink_c('rx_test.dat')
-
-        
         
         self.connect(self.packet_transmitter, self.gain, self.u)
-        #gr.hier_block.__init__(self, fg, None, None)
 
         self.set_gain(self.subdev.gain_range()[1])  # set max Tx gain
         self.set_auto_tr(True)                      # enable Auto Transmit/Receive switching
-
-    def set_freq(self, target_freq):
-        """
-        Set the center frequency we're interested in.
-
-        @param target_freq: frequency in Hz
-        @rypte: bool
-
-        Tuning is a two step process.  First we ask the front-end to
-        tune as close to the desired frequency as it can.  Then we use
-        the result of that operation and our target_frequency to
-        determine the value for the digital up converter.  Finally, we feed
-        any residual_freq to the s/w freq translater.
-        """
-        r = self.u.tune(self.subdev._which, self.subdev, target_freq)
-        if r:
-            # Could use residual_freq in s/w freq translator
-            return True
-
-        return False
 
     def set_gain(self, gain):
         self.gain = gain
@@ -208,20 +164,13 @@ class transmit_path(gr.flow_graph):
         return self.subdev.set_auto_tr(enable)
         
     def send_pkt(self, payload='', eof=False):
+        """
+        Send a packet with a predetermined sequence number and from/to address.
+        """
         return self.packet_transmitter.send_pkt(0xe5, struct.pack("HHHH", 0xFFFF, 0xFFFF, 0x10, 0x10), payload, eof)
 
     def send_pkt(self, seqno, address, payload='', eof=False):
         return self.packet_transmitter.send_pkt(seqno, address, payload, eof)
-
-    def bitrate(self):
-        return self._bitrate
-
-    def spb(self):
-        return self._spb
-
-    def interp(self):
-        return self._interp
-
 
 def main ():
 
@@ -239,9 +188,6 @@ def main ():
             fgtx.send_pkt(pktno, payload[3:11], payload[11:len(payload)-2])
             print " ------------------------"
 
-    #    print "send message %d:"%(i+1,)
-
-        
 
     parser = OptionParser (option_class=eng_option)
     parser.add_option("-R", "--rx-subdev-spec", type="subdev", default=None,
@@ -269,26 +215,14 @@ def main ():
     fgrx = oqpsk_rx_graph(options, rx_callback)
     fgrx.start()
 
-    start = time.time()
-    
-    #for i in range(1000):
-    #    print "send message %d:"%(i+1,)
-    #    fg.send_pkt(struct.pack('9B', 0x1, 0x80, 0x80, 0xff, 0xff, 0x10, 0x0, 0x20, 0x0))
-        #fg.send_pkt(struct.pack('BBBBBBBBBBBBBBBBBBBBBBBBBBB', 0x1, 0x8d, 0x8d, 0xff, 0xff, 0xbd, 0x0, 0x22, 0x12, 0xbd, 0x0, 0x1, 0x0, 0xff, 0xff, 0x8e, 0xff, 0xff, 0x0, 0x3, 0x3, 0xbd, 0x0, 0x1, 0x0, 0x0, 0x0))
-        #0x1, 0x8d, 0x8d, 0xff, 0xff, 0x02, 0x0, 0x22, 0x12, 0xd6, 0x0, 0xff, 0xff, 0x8e, 0xff, 0xff, 0x0, 0x0, 0x0, 0xd6, 0x0, 0x15, 0x0, 0x0, 0x0))
-    #    time.sleep(0.005)
-                    
     fgrx.wait()
     fgtx.wait()
     
-    end = time.time()
-
-    print "time taken: %f s"%(end-start)
 
 if __name__ == '__main__':
     # insert this in your test code...
-    import os
-    print 'Blocked waiting for GDB attach (pid = %d)' % (os.getpid(),)
+    #import os
+    #print 'Blocked waiting for GDB attach (pid = %d)' % (os.getpid(),)
     #raw_input ('Press Enter to continue: ')
     
     main ()

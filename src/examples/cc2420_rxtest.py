@@ -1,45 +1,7 @@
 #!/usr/bin/env python
 
 #
-# Copyright (c) 2003 The Regents of the University of California.
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above
-#    copyright notice, this list of conditions and the following
-#    disclaimer in the documentation and/or other materials provided
-#    with the distribution.
-# 3. All advertising materials mentioning features or use of this
-#    software must display the following acknowledgement:
-#       This product includes software developed by Networked &
-#       Embedded Systems Lab at UCLA
-# 4. Neither the name of the University nor that of the Laboratory
-#    may be used to endorse or promote products derived from this
-#    software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS''
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS
-# OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
-# USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
-# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-# SUCH DAMAGE.
-#
-
-
-#
-# Decoder of Mica2 RADIO Packets. We use the SOS operating system for Mica2s.
-# Similar code should also work with TinyOS, though you would want to modify
-# the packet structure in cc1k_sos_pkt.py.
+# Decoder of IEEE 802.15.4 RADIO Packets.
 #
 # Modified by: Thomas Schmid
 #
@@ -52,11 +14,6 @@ from gnuradio.ucla_blks import ieee802_15_4_pkt
 from gnuradio.eng_option import eng_option
 from optparse import OptionParser
 import math, struct, time
-
-#from gnuradio.wxgui import stdgui, fftsink, scopesink
-#import wx
-
-start = 0
 
 def pick_subdevice(u):
     """
@@ -103,32 +60,13 @@ class oqpsk_rx_graph (gr.flow_graph):
 
         subdev = usrp.selected_subdev(u, options.rx_subdev_spec)
         print "Using RX d'board %s" % (subdev.side_and_name(),)
-        #subdev.select_rx_antenna('RX2')
 
-        #u.set_rx_freq (0, -options.cordic_freq)
         u.tune(0, subdev, options.cordic_freq)
         u.set_pga(0, options.gain)
         u.set_pga(1, options.gain)
 
-        filter_taps =  gr.firdes.low_pass (1,                   # gain
-                                           self.fs,             # sampling rate
-                                           self.data_rate / 2 * 1.1, # cutoff
-                                           self.data_rate,           # trans width
-                                           gr.firdes.WIN_HANN)
-
-        print "len = ", len (filter_taps)
-
-        #filter = gr.fir_filter_ccf (1, filter_taps)
-
-        # receiver
-        #self.file_sink = gr.file_sink(gr.sizeof_gr_complex, "/home/thomas/projects/sdr/gnuradio/gr-build/gr-ucla/src/python/oqpsk_synced_2sps.dat")
-        #self.connect(u, self.file_sink)
-        
-        #self.u = gr.file_source(gr.sizeof_gr_complex, "/media/ramdrive/oqpsk_receive_2sps.dat")
         self.u = u
         
-        #self.squelch = gr.simple_squelch_cc(50)
-
         self.packet_receiver = ieee802_15_4_pkt.ieee802_15_4_demod_pkts(self,
                                                                 callback=rx_callback,
                                                                 sps=self.samples_per_symbol,
@@ -136,11 +74,7 @@ class oqpsk_rx_graph (gr.flow_graph):
                                                                 threshold=-1)
 
         self.squelch = gr.simple_squelch_cc(50)
-        #self.file_sink = gr.file_sink(gr.sizeof_gr_complex, "/dev/null")
         self.connect(self.u, self.squelch, self.packet_receiver)
-        #self.connect(self.u, self.file_sink)
-        
-        #send a packet...
 
 def main ():
 
@@ -178,18 +112,13 @@ def main ():
 
     fg = oqpsk_rx_graph(options, rx_callback)
     fg.start()
-    start = time.time()
 
     fg.wait()
 
-    end = time.time()
-
-    print "time taken: %f s"%(end-start)
-
 if __name__ == '__main__':
     # insert this in your test code...
-    import os
-    print 'Blocked waiting for GDB attach (pid = %d)' % (os.getpid(),)
+    #import os
+    #print 'Blocked waiting for GDB attach (pid = %d)' % (os.getpid(),)
     #raw_input ('Press Enter to continue: ')
     
     main ()
