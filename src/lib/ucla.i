@@ -10,7 +10,7 @@
 #include "ucla_cc1k_correlator_cb.h"
 #include "ucla_sos_packet_sink.h"
 #include "ucla_ieee802_15_4_packet_sink.h"
-#include "ucla_qpsk_modulator_fc.h"
+#include "ucla_qpsk_modulator_cc.h"
 #include "ucla_delay_cc.h"
 #include "ucla_symbols_to_chips_bi.h"
 #include <stdexcept>
@@ -65,14 +65,14 @@ private:
 };
 
 
-GR_SWIG_BLOCK_MAGIC(ucla,qpsk_modulator_fc);
+GR_SWIG_BLOCK_MAGIC(ucla,qpsk_modulator_cc);
 
-ucla_qpsk_modulator_fc_sptr ucla_make_qpsk_modulator_fc ();
+ucla_qpsk_modulator_cc_sptr ucla_make_qpsk_modulator_cc ();
 
-class ucla_qpsk_modulator_fc : public gr_sync_interpolator
+class ucla_qpsk_modulator_cc : public gr_sync_interpolator
 {
 private:
-  ucla_qpsk_modulator_fc ();
+  ucla_qpsk_modulator_cc ();
 };
 
 GR_SWIG_BLOCK_MAGIC(ucla,symbols_to_chips_bi);

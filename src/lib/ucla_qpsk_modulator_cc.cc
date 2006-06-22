@@ -29,47 +29,63 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
 */
 
-#ifndef INCLUDED_UCLA_QPSK_MODULATOR_FC_H
-#define INCLUDED_UCLA_QPSK_MODULATOR_FC_H
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include <gr_sync_interpolator.h>
-#include <gr_types.h>
+#include <ucla_qpsk_modulator_cc.h>
 #include <gr_io_signature.h>
+#include <assert.h>
 
-class ucla_qpsk_modulator_fc;
+static const int SAMPLES_PER_SYMBOL = 4;
 
-typedef boost::shared_ptr<ucla_qpsk_modulator_fc> ucla_qpsk_modulator_fc_sptr;
-
-ucla_qpsk_modulator_fc_sptr 
-ucla_make_qpsk_modulator_fc ();
-
-/*!
- * \brief Generates a half-sine pulse shape QPSK complex signal
- * from a float input stream. For each 2 input symbols, the block
- * generates four complex output symbols, i.e., it upsamples by a
- * constant factor of 2.
- * \ingroup ucla
- *
- * input: stream of float
- * output: stream of complex
- *
- */
-
-class ucla_qpsk_modulator_fc : public gr_sync_interpolator
+ucla_qpsk_modulator_cc_sptr 
+ucla_make_qpsk_modulator_cc ()
 {
-  friend ucla_qpsk_modulator_fc_sptr ucla_make_qpsk_modulator_fc ();
+  return ucla_qpsk_modulator_cc_sptr (new ucla_qpsk_modulator_cc ());
+}
 
- protected:
-  ucla_qpsk_modulator_fc ();
+ucla_qpsk_modulator_cc::ucla_qpsk_modulator_cc ()
+  : gr_sync_interpolator ("qpsk_modulator_cc",
+			  gr_make_io_signature (1, 1, sizeof (gr_complex)),
+			  gr_make_io_signature (1, 1, sizeof (gr_complex)),
+			  SAMPLES_PER_SYMBOL)
+{
+}
 
- public:
-  ~ucla_qpsk_modulator_fc();
+ucla_qpsk_modulator_cc::~ucla_qpsk_modulator_cc()
+{
+  return;
+}
+
+/**
+ * Generate a QPSK signal from a +/- 1 float stream. For each
+ * two input symbols we output 4 complex symbols with a half-sine
+ * pulse shape.
+ */
+int
+ucla_qpsk_modulator_cc::work (int noutput_items,
+			gr_vector_const_void_star &input_items,
+			gr_vector_void_star &output_items)
+{
+  const gr_complex *in = (gr_complex *) input_items[0];
+  gr_complex *out = (gr_complex *) output_items[0];
+
+  assert (noutput_items % SAMPLES_PER_SYMBOL == 0);
+
+  for (int i = 0; i < noutput_items / SAMPLES_PER_SYMBOL; i++){
+    float iphase = real(in[i]);
+    float qphase = imag(in[i]);
+    //fprintf(stderr, "%.0f %.0f ", iphase, qphase), fflush(stderr);
+
+    *out++ = gr_complex(0.0, 0.0);
+    *out++ = gr_complex(iphase * 0.70710678, qphase * 0.70710678);
+    *out++ = gr_complex(iphase, qphase);
+    *out++ = gr_complex(iphase * 0.70710678, qphase * 0.70710678);
+  }
+
+  return noutput_items;
+}
 
 
-  int work (int noutput_items,
-	    gr_vector_const_void_star &input_items,
-	    gr_vector_void_star &output_items);
-
-};
-
-#endif /* INCLUDED_UCLA_QPSK_MODULATOR_FC_H */
+  

@@ -50,10 +50,10 @@ class ieee802_15_4_mod(gr.hier_block):
         self.spb = spb
 
         self.symbolsToChips = ucla.symbols_to_chips_bi()
-        self.chipsToSymbols = gr.packed_to_unpacked_ii(1, gr.GR_MSB_FIRST)
-        self.symbolsToConstellation = gr.chunks_to_symbols_if((-1, 1))
+        self.chipsToSymbols = gr.packed_to_unpacked_ii(2, gr.GR_MSB_FIRST)
+        self.symbolsToConstellation = gr.chunks_to_symbols_ic((-1-1j, -1+1j, 1-1j, 1+1j))
 
-        self.pskmod = ucla.qpsk_modulator_fc()
+        self.pskmod = ucla.qpsk_modulator_cc()
         self.delay = ucla.delay_cc(self.spb)
 
 

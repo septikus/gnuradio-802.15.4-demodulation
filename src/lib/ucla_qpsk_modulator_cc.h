@@ -29,62 +29,47 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef INCLUDED_UCLA_QPSK_MODULATOR_CC_H
+#define INCLUDED_UCLA_QPSK_MODULATOR_CC_H
 
-#include <ucla_qpsk_modulator_fc.h>
+#include <gr_sync_interpolator.h>
+#include <gr_types.h>
 #include <gr_io_signature.h>
-#include <assert.h>
 
-static const int SAMPLES_PER_SYMBOL = 2;
+class ucla_qpsk_modulator_cc;
 
-ucla_qpsk_modulator_fc_sptr 
-ucla_make_qpsk_modulator_fc ()
-{
-  return ucla_qpsk_modulator_fc_sptr (new ucla_qpsk_modulator_fc ());
-}
+typedef boost::shared_ptr<ucla_qpsk_modulator_cc> ucla_qpsk_modulator_cc_sptr;
 
-ucla_qpsk_modulator_fc::ucla_qpsk_modulator_fc ()
-  : gr_sync_interpolator ("qpsk_modulator_fc",
-			  gr_make_io_signature (1, 1, sizeof (float)),
-			  gr_make_io_signature (1, 1, sizeof (gr_complex)),
-			  SAMPLES_PER_SYMBOL)
-{
-}
+ucla_qpsk_modulator_cc_sptr 
+ucla_make_qpsk_modulator_cc ();
 
-ucla_qpsk_modulator_fc::~ucla_qpsk_modulator_fc()
-{
-  return;
-}
-
-/**
- * Generate a QPSK signal from a +/- 1 float stream. For each
- * two input symbols we output 4 complex symbols with a half-sine
- * pulse shape.
+/*!
+ * \brief Generates a half-sine pulse shape QPSK complex signal
+ * from a float input stream. For each 2 input symbols, the block
+ * generates four complex output symbols, i.e., it upsamples by a
+ * constant factor of 2.
+ * \ingroup ucla
+ *
+ * input: stream of float
+ * output: stream of complex
+ *
  */
-int
-ucla_qpsk_modulator_fc::work (int noutput_items,
-			gr_vector_const_void_star &input_items,
-			gr_vector_void_star &output_items)
+
+class ucla_qpsk_modulator_cc : public gr_sync_interpolator
 {
-  const float *in = (float *) input_items[0];
-  gr_complex *out = (gr_complex *) output_items[0];
+  friend ucla_qpsk_modulator_cc_sptr ucla_make_qpsk_modulator_cc ();
 
-  assert (noutput_items % SAMPLES_PER_SYMBOL == 0);
+ protected:
+  ucla_qpsk_modulator_cc ();
 
-  for (int i = 0; i < noutput_items / SAMPLES_PER_SYMBOL / 2; i++){
-    float iphase = in[2*i];
-    float qphase = in[2*i+1];
-
-    *out++ = gr_complex(0.0, 0.0);
-    *out++ = gr_complex(iphase * 0.70710678, qphase * 0.70710678);
-    *out++ = gr_complex(iphase, qphase);
-    *out++ = gr_complex(iphase * 0.70710678, qphase * 0.70710678);
-  }
-
-  return noutput_items;
-}
+ public:
+  ~ucla_qpsk_modulator_cc();
 
 
-  
+  int work (int noutput_items,
+	    gr_vector_const_void_star &input_items,
+	    gr_vector_void_star &output_items);
+
+};
+
+#endif /* INCLUDED_UCLA_QPSK_MODULATOR_CC_H */

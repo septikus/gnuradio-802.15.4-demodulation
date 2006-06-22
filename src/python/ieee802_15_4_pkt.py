@@ -80,7 +80,7 @@ def make_ieee802_15_4_packet(FCF, seqNr, addressInfo, payload, pad_for_usrp=True
 
     if pad_for_usrp:
         # note that we have 16 samples which go over the USB for each bit
-        pkt = pkt + (_npadding_bytes(len(pkt), 8) * '\x00')+100*'\x00'
+        pkt = pkt + (_npadding_bytes(len(pkt), 8) * '\x00')+0*'\x00'
 
     return pkt
 

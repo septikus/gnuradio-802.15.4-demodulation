@@ -55,7 +55,7 @@ ucla_delay_cc::work (int noutput_items,
   gr_complex *in = (gr_complex *) input_items[0];
   gr_complex *out = (gr_complex *) output_items[0];
 
-  fprintf(stderr, "."), fflush(stderr);
+  //fprintf(stderr, "."), fflush(stderr);
   for (int j = 0; j < noutput_items; j++)
       out[j] = gr_complex (real(in[j]), imag(in[j-d_delay]));
 

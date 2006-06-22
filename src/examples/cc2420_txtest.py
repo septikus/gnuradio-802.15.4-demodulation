@@ -56,12 +56,12 @@ class transmit_path(gr.flow_graph):
         # transmitter
         self.packet_transmitter = ieee802_15_4_pkt.ieee802_15_4_mod_pkts(self, spb=self._spb, msgq_limit=2)
         self.gain = gr.multiply_const_cc (self.normal_gain)
-        #self.filesink = gr.filesink_c('rx_test.dat')
+        #self.filesink = gr.file_sink(gr.sizeof_gr_complex, 'rx_test.dat')
 
         
         
         self.connect(self.packet_transmitter, self.gain, self.u)
-        #gr.hier_block.__init__(self, fg, None, None)
+        #self.connect(self.gain, self.filesink)
 
         self.set_gain(self.subdev.gain_range()[1])  # set max Tx gain
         self.set_auto_tr(True)                      # enable Auto Transmit/Receive switching
@@ -98,12 +98,12 @@ def main ():
     fg = transmit_path(options)
     fg.start()
     
-    for i in range(1000):
+    for i in range(10):
         print "send message %d:"%(i+1,)
         fg.send_pkt(struct.pack('9B', 0x1, 0x80, 0x80, 0xff, 0xff, 0x10, 0x0, 0x20, 0x0))
         #this is an other example packet we could send.
         #fg.send_pkt(struct.pack('BBBBBBBBBBBBBBBBBBBBBBBBBBB', 0x1, 0x8d, 0x8d, 0xff, 0xff, 0xbd, 0x0, 0x22, 0x12, 0xbd, 0x0, 0x1, 0x0, 0xff, 0xff, 0x8e, 0xff, 0xff, 0x0, 0x3, 0x3, 0xbd, 0x0, 0x1, 0x0, 0x0, 0x0))
-        time.sleep(0.005)
+        time.sleep(1)
                     
     fg.wait()
 

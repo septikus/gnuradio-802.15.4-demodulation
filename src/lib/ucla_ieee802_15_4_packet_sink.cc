@@ -41,9 +41,9 @@
 #include <gr_count_bits.h>
 
 // very verbose output for almost each sample
-#define VERBOSE 0
+#define VERBOSE 1
 // less verbose output for higher level debugging
-#define VERBOSE2 0
+#define VERBOSE2 1
 
 static const int DEFAULT_THRESHOLD = 3;  // detect access code with up to DEFAULT_THRESHOLD bits wrong
 
@@ -118,7 +118,7 @@ ucla_ieee802_15_4_packet_sink::decode_chips(unsigned int chips){
   for(i=0; i<16; i++) {
     // FIXME: we can store the last chip
     // ignore the first chip since it depends on the last chip.
-    if (gr_count_bits32((chips&0x7FFFFFFF) ^ CHIP_MAPPING[i]) <= d_threshold) {
+    if (gr_count_bits32((chips&0x7FFFFFFE) ^ (CHIP_MAPPING[i]&0xFFFFFFFE)) <= d_threshold) {
       return (char)i&0xFF;
     }
   }
@@ -190,7 +190,7 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 	  //threshold = gr_count_bits32((d_shift_reg&0x7FFFFFFF) ^ CHIP_MAPPING[0]);
 	  //if(threshold < 5)
 	  //  fprintf(stderr, "Threshold %d d_preamble_cnt: %d\n", threshold, d_preamble_cnt);
-	  if ((d_shift_reg&0xFFFFFF) == (CHIP_MAPPING[0]&0xFFFFFF)) {
+	  if ((d_shift_reg&0xFFFFFE) == (CHIP_MAPPING[0]&0xFFFFFE)) {
 	    if (VERBOSE2)
 	      fprintf(stderr,"Found 0 in chip sequence\n"),fflush(stderr);	
 	    // we found a 0 in the chip sequence
@@ -203,7 +203,7 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 	    d_chip_cnt = 0;
 	    if(d_preamble_cnt < 8) {
 	      //if (gr_count_bits32((d_shift_reg&0x7FFFFFFF) ^ CHIP_MAPPING[0]) <= d_threshold) {
-	      if ((d_shift_reg&0x7FFFFFFF) == CHIP_MAPPING[0]) {
+	      if ((d_shift_reg&0x7FFFFFFE) == (CHIP_MAPPING[0]&0xFFFFFFFE)) {
 		if (VERBOSE2)
 		  fprintf(stderr,"Found %d 0 in chip sequence\n", d_preamble_cnt),fflush(stderr);	
 		// we found a 0 in the chip sequence
@@ -220,13 +220,13 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 	    } else {
 	      // we found 8 zeros in the chip sequences check if we have the SFD
 	      if(d_packet_byte == 0) {
-		if ((d_shift_reg&0x7FFFFFFF) == CHIP_MAPPING[0]) {	
+		if ((d_shift_reg&0x7FFFFFFE) == (CHIP_MAPPING[0]&0xFFFFFFFE)) {	
 		  if (VERBOSE2)
 		    fprintf(stderr,"Found %d 0 in chip sequence\n", d_preamble_cnt),fflush(stderr);	
 		  // we found an other 0 in the chip sequence
 		  d_packet_byte = 0;
 		  d_preamble_cnt ++;
-		} else if (gr_count_bits32((d_shift_reg&0x7FFFFFFF) ^ CHIP_MAPPING[7]) <= d_threshold) {
+		} else if (gr_count_bits32((d_shift_reg&0x7FFFFFFE) ^ (CHIP_MAPPING[7]&0xFFFFFFFE)) <= d_threshold) {
 		  if (VERBOSE2)
 		    fprintf(stderr,"Found first SFD\n", d_preamble_cnt),fflush(stderr);	
 		  d_packet_byte = 7<<4;
@@ -238,7 +238,7 @@ int ucla_ieee802_15_4_packet_sink::work (int noutput_items,
 		  break;
 		}
 	      } else {
-		if (gr_count_bits32((d_shift_reg&0x7FFFFFFF) ^ CHIP_MAPPING[10]) <= d_threshold) {
+		if (gr_count_bits32((d_shift_reg&0x7FFFFFFE) ^ (CHIP_MAPPING[10]&0xFFFFFFFE)) <= d_threshold) {
 		  d_packet_byte |= 0xA;
 		  if (VERBOSE2)
 		    fprintf(stderr,"Found sync, 0x%x\n", d_packet_byte),fflush(stderr);	
