@@ -8,12 +8,11 @@
   
 from gnuradio import gr, eng_notation
 from gnuradio import usrp
-from gnuradio import audio
 from gnuradio import ucla
 from gnuradio.ucla_blks import ieee802_15_4_pkt
 from gnuradio.eng_option import eng_option
 from optparse import OptionParser
-import math, struct, time
+import math, struct, time, sys
 
 def pick_subdevice(u):
     """
@@ -82,16 +81,13 @@ def main ():
         st.npkts += 1
         if ok:
             st.nright += 1
-        if len(payload) <= 16:
-            print "ok = %5r  %d/%d" % (ok, st.nright, st.npkts)
-            print "  payload: " + str(map(hex, map(ord, payload)))
-            print " ------------------------"
-        else:
-            (pktno,) = struct.unpack('!H', payload[0:2])
-            print "ok = %5r  pktno = %4d  len(payload) = %4d  %d/%d" % (ok, pktno, len(payload),
-                                                                        st.nright, st.npkts)
-            print "  payload: " + str(map(hex, map(ord, payload)))
-            print " ------------------------"
+
+        (pktno,) = struct.unpack('!H', payload[0:2])
+        print "ok = %5r  pktno = %4d  len(payload) = %4d  %d/%d" % (ok, pktno, len(payload),
+                                                                    st.nright, st.npkts)
+        print "  payload: " + str(map(hex, map(ord, payload)))
+        print " ------------------------"
+        sys.stdout.flush()
 
         
     parser = OptionParser (option_class=eng_option)

@@ -31,7 +31,6 @@
   
 from gnuradio import gr, eng_notation
 from gnuradio import usrp
-from gnuradio import audio
 from gnuradio import ucla
 from gnuradio.ucla_blks import ieee802_15_4_pkt
 from gnuradio.eng_option import eng_option
@@ -112,7 +111,7 @@ class oqpsk_rx_graph (gr.flow_graph):
                                                                 symbol_rate=self.data_rate,
                                                                 threshold=-1)
 
-        self.squelch = gr.simple_squelch_cc(50)
+        self.squelch = gr.pwr_squelch_cc(50, 1, 0, True)
         #self.file_sink = gr.file_sink(gr.sizeof_gr_complex, "/dev/null")
         self.connect(self.u, self.squelch, self.packet_receiver)
         #self.connect(self.u, self.file_sink)

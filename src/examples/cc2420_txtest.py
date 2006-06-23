@@ -8,7 +8,6 @@
   
 from gnuradio import gr, eng_notation
 from gnuradio import usrp
-from gnuradio import audio
 from gnuradio import ucla
 from gnuradio.ucla_blks import ieee802_15_4_pkt
 from gnuradio.eng_option import eng_option
@@ -56,11 +55,10 @@ class transmit_path(gr.flow_graph):
         # transmitter
         self.packet_transmitter = ieee802_15_4_pkt.ieee802_15_4_mod_pkts(self, spb=self._spb, msgq_limit=2)
         self.gain = gr.multiply_const_cc (self.normal_gain)
-        #self.filesink = gr.file_sink(gr.sizeof_gr_complex, 'rx_test.dat')
-
-        
         
         self.connect(self.packet_transmitter, self.gain, self.u)
+
+        #self.filesink = gr.file_sink(gr.sizeof_gr_complex, 'rx_test.dat')
         #self.connect(self.gain, self.filesink)
 
         self.set_gain(self.subdev.gain_range()[1])  # set max Tx gain
