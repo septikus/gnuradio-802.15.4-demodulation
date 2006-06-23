@@ -79,7 +79,7 @@ protected:
   void enter_search();
   void enter_have_sync();
   void enter_have_header(int payload_len);
-  unsigned char ucla_ieee802_15_4_packet_sink::decode_chips(unsigned int chips);
+  unsigned char decode_chips(unsigned int chips);
   int slice(float x) { return x > 0 ? 1 : 0; }
   
   bool header_ok()
