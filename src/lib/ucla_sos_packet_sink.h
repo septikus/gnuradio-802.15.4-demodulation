@@ -30,7 +30,7 @@ class ucla_sos_packet_sink;
 typedef boost::shared_ptr<ucla_sos_packet_sink> ucla_sos_packet_sink_sptr;
 
 ucla_sos_packet_sink_sptr 
-ucla_sos_make_packet_sink (const std::vector<unsigned char>& sync_vector,
+ucla_make_sos_packet_sink (const std::vector<unsigned char>& sync_vector,
 			   gr_msg_queue_sptr target_queue,
 			   int threshold = -1	                // -1 -> use default
 			   );

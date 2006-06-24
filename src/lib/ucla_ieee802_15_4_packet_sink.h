@@ -30,7 +30,7 @@ class ucla_ieee802_15_4_packet_sink;
 typedef boost::shared_ptr<ucla_ieee802_15_4_packet_sink> ucla_ieee802_15_4_packet_sink_sptr;
 
 ucla_ieee802_15_4_packet_sink_sptr 
-ucla_ieee802_15_4_make_packet_sink (gr_msg_queue_sptr target_queue,
+ucla_make_ieee802_15_4_packet_sink (gr_msg_queue_sptr target_queue,
 			      int threshold = -1	                // -1 -> use default
 			      );
 /*!
