@@ -33,7 +33,7 @@ from math import pi
 
 class cc1k_mod(gr.hier_block):
 
-    def __init__(self, fg, spb = 2, bt = 0.3):
+    def __init__(self, fg, spb = 8, bt = 0.3):
         """
 	Hierarchical block for cc1k FSK modulation.
 
@@ -67,41 +67,55 @@ class cc1k_mod(gr.hier_block):
 
 
 class cc1k_demod(gr.hier_block):
-	def __init__(self, fg, sps = 8, symbol_rate = 38400, p_size = 13):
-		"""
-		Hierarchical block for FSK demodulation.
+    def __init__(self, fg, sps = 8, symbol_rate = 38400, p_size = 13):
+        """
+        Hierarchical block for FSK demodulation.
+    
+        The input is the complex modulated signal at baseband
+        and the output is a stream of bytes.
+        
+        @param fg: flow graph
+        @type fg: flow graph
+        @param sps: samples per symbol
+        @type sps: integer
+        @param symbol_rate: symbols per second
+        @type symbol_rate: float
+        @param p_size: packet size
+        @type p_size: integer
+        """
+        
+        # Demodulate FM
+        sensitivity = (pi / 2) / sps
+        #self.fmdemod = gr.quadrature_demod_cf(1.0 / sensitivity)
+        self.fmdemod = gr.quadrature_demod_cf(1 / sensitivity)
 
-		The input is the complex modulated signal at baseband
-		and the output is a stream of bytes.
+        # Low pass the output of fmdemod to allow us to remove
+        # the DC offset resulting from frequency offset
 
-		@param fg: flow graph
-		@type fg: flow graph
-		@param sps: samples per symbol
-		@type sps: integer
-		@param symbol_rate: symbols per second
-		@type symbol_rate: float
-		@param p_size: packet size
-		@type p_size: integer
-		"""
-		
-		# Demodulate FM
-		sensitivity = (pi / 2) / sps
-		#self.fmdemod = gr.quadrature_demod_cf(1.0 / sensitivity)
-		self.fmdemod = gr.quadrature_demod_cf(1)
-
-		# Integrate over a bit length to smooth noise
-		#integrate_taps = (1.0 / sps,) * sps
-		#integrate_taps = (1.0,0,0,0,0,0,0,0,0)
-		#self.integrate_filter = gr.fir_filter_fff(1, integrate_taps)
-
-		# Bit slice, try and find the center of the bit from the sync
-		# field placed by the framer, output p_size bytes at a time.
-		self.correlator = ucla.cc1k_correlator_cb(p_size, 0, 0, 0)
-
-		# Connect
-                fg.connect(self.fmdemod, self.correlator)
-
-		# Initialize base class
-		gr.hier_block.__init__(self, fg, self.fmdemod, self.correlator)
-
-# vim:ts=8
+        alpha = 0.0512/sps
+        self.freq_offset = gr.single_pole_iir_filter_ff(alpha)
+        self.sub = gr.sub_ff()
+        
+        fg.connect(self.fmdemod, (self.sub, 0))
+        fg.connect(self.fmdemod, self.freq_offset, (self.sub, 1))
+        
+        
+        # recover the clock
+        omega = sps
+        gain_mu=0.03
+        mu=0.5
+        omega_relative_limit=0.0002
+        freq_error=0.0
+        
+        gain_omega = .25*gain_mu*gain_mu        # critically damped
+        self.clock_recovery = gr.clock_recovery_mm_ff(omega, gain_omega, mu, gain_mu,
+                                                      omega_relative_limit)
+        
+        # Connect
+        fg.connect(self.sub, self.clock_recovery)
+        
+        filesink = gr.file_sink(gr.sizeof_float, 'rx_fsk_test.dat')
+        fg.connect(self.clock_recovery, filesink)
+        
+        # Initialize base class
+        gr.hier_block.__init__(self, fg, self.fmdemod, self.clock_recovery)

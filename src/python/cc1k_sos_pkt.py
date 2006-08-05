@@ -29,6 +29,7 @@ import Numeric
 
 from gnuradio import gr, packet_utils
 from gnuradio import ucla
+import crc16
 import gnuradio.gr.gr_threading as _threading
 import cc1k
 
@@ -56,9 +57,7 @@ def make_sos_packet(am_group, module_src, module_dst, dst_addr, src_addr, msg_ty
     crc = 0xaa
     header = ''.join(chr(am_group), chr(module_src), chr(module_dst), chr(dst_addr&0xFF), chr((dst_addr >> 8) & 0xFF), chr(src_addr&0xFF), chr((src_addr >> 8) & 0xFF), chr(msg_type&0xFF), chr((len(payload) & 0xFF)))
     
-                    
-    
-    pkt = ''.join(access_code, header, payload, crc)
+    pkt = ''.join(20*chr(153)+access_code, header, payload, crc)
 
     return pkt
 
@@ -207,6 +206,9 @@ class _queue_watcher_thread(_threading.Thread):
             msg_payload = payload[9:9+msg_len]
             crc = ord(payload[-1])
 
+            crcClass = crc16.CRC16()
+            crcClass.update(payload[0:9+msg_len])
+
             print " bare msg: " + str(map(hex, map(ord, payload)))
             print " am group: " + str(am_group)
             print "  src_addr: "+str(src_addr)+" dst_addr: "+str(dst_addr)
@@ -214,6 +216,7 @@ class _queue_watcher_thread(_threading.Thread):
             print "  msg type: " + str(msg_type) + " msg len: " +str(msg_len)
             print "  msg: " + str(map(hex, map(ord, msg_payload)))
             print "  crc: " + str(crc)
+            print "  crc_check: 0x" + str(crcClass.hexchecksum())
             print
             
             if self.callback:

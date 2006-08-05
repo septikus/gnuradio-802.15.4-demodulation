@@ -49,8 +49,8 @@ from gnuradio.eng_option import eng_option
 from optparse import OptionParser
 import math
 
-from gnuradio.wxgui import stdgui, fftsink, scopesink
-import wx
+#from gnuradio.wxgui import stdgui, fftsink, scopesink
+#import wx
 
 def pick_subdevice(u):
     """
@@ -71,11 +71,11 @@ class stats(object):
         self.nright = 0
         
     
-class fsk_rx_graph (stdgui.gui_flow_graph):
+class fsk_rx_graph (gr.flow_graph):
     st = stats()
 
-    def __init__(self, frame, panel, vbox, argv):
-        stdgui.gui_flow_graph.__init__ (self, frame, panel, vbox, argv)
+    def __init__(self):
+        gr.flow_graph.__init__ (self)
 
         parser = OptionParser (option_class=eng_option)
         parser.add_option("-R", "--rx-subdev-spec", type="subdev", default=None,
@@ -113,6 +113,7 @@ class fsk_rx_graph (stdgui.gui_flow_graph):
         u.set_mux(usrp.determine_rx_mux_value(u, options.rx_subdev_spec))
 
         subdev = usrp.selected_subdev(u, options.rx_subdev_spec)
+        print "Using RX d'board %s" % (subdev.side_and_name(),)
 
         #u.set_rx_freq (0, -options.cordic_freq)
         u.tune(0, subdev, options.cordic_freq)
@@ -141,6 +142,9 @@ class fsk_rx_graph (stdgui.gui_flow_graph):
 
         self.connect(u, self.packet_receiver)
             
+        #self.filesink = gr.file_sink(gr.sizeof_gr_complex, 'rx_test.dat')
+        #self.connect(u, self.filesink)
+        
         if 0 and not(options.no_gui):
             fft_input = fftsink.fft_sink_c (self, panel, title="Input", fft_size=512, sample_rate=self.fs)
             self.connect (u, fft_input)
@@ -153,14 +157,10 @@ class fsk_rx_graph (stdgui.gui_flow_graph):
         self.st.npkts += 1
         if ok:
             self.st.nright += 1
-        if len(payload) <= 16:
-            print "ok = %5r  %d/%d" % (ok, self.st.nright, self.st.npkts)
-            print "  payload: " + str(map(hex, map(ord, payload)))
-            print " ------------------------"
-        else:
-            (pktno,) = struct.unpack('!H', payload[0:2])
-            print "ok = %5r  pktno = %4d  len(payload) = %4d  %d/%d" % (ok, pktno, len(payload),
-                                                                        self.st.nright, self.st.npkts)
+
+        print "ok = %5r  %d/%d" % (ok, self.st.nright, self.st.npkts)
+        print "  payload: " + str(map(hex, map(ord, payload)))
+        print " ------------------------"
 
 class transmit_path:
     def __init__(self, fg, subdev_spec, bitrate, interp, spb, bt, log_p=False):
@@ -233,10 +233,10 @@ class transmit_path:
 
 
 def main ():
-    tx = transmit_path()
-    
-    app = stdgui.stdapp (fsk_rx_graph, "FSK Rx")
-    app.MainLoop ()
+    #tx = transmit_path()
+    rx = fsk_rx_graph()
+    rx.start()
+    rx.wait()
 
 if __name__ == '__main__':
     # insert this in your test code...
