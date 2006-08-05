@@ -32,6 +32,7 @@ from gnuradio import ucla
 import crc16
 import gnuradio.gr.gr_threading as _threading
 import cc1k
+import struct
 
 HEADER_SIZE = 8
 MAX_PKT_SIZE = 128 - HEADER_SIZE
@@ -54,10 +55,11 @@ def make_sos_packet(am_group, module_src, module_dst, dst_addr, src_addr, msg_ty
 
     if len(payload) > MAX_PKT_SIZE:
         raise ValueError, "len(payload) must be in [0, %d]" %(MAX_PKT_SIZE)
-    crc = 0xaa
-    header = ''.join(chr(am_group), chr(module_src), chr(module_dst), chr(dst_addr&0xFF), chr((dst_addr >> 8) & 0xFF), chr(src_addr&0xFF), chr((src_addr >> 8) & 0xFF), chr(msg_type&0xFF), chr((len(payload) & 0xFF)))
+    crc = chr(0xfe)
+    header = ''.join((chr(am_group), chr(module_src), chr(module_dst), chr(dst_addr&0xFF), chr((dst_addr >> 8) & 0xFF), chr(src_addr&0xFF), chr((src_addr >> 8) & 0xFF), chr(msg_type&0xFF), chr((len(payload) & 0xFF))))
     
-    pkt = ''.join(20*chr(153)+access_code, header, payload, crc)
+    # create the packet with the syncronization header of 100x '10' in front.
+    pkt = ''.join((25*struct.pack('B', 0xaa), access_code, header, payload, crc))
 
     return pkt
 
@@ -86,10 +88,11 @@ class cc1k_mod_pkts(gr.hier_block):
         """
         self.pad_for_usrp = pad_for_usrp
         if access_code is None:
-            #this is 0x999999995a5aa5a5
-            access_code = chr(153) + chr(153) + chr(153) + chr(153) + chr(90) + chr(90) + chr(165) + chr(165)
-        if not isinstance(access_code, str) or len(access_code) != 8:
-            raise ValueError, "Invalid access_code '%r'" % (access_code,)
+            #this is 0x33CC
+            access_code = struct.pack('BB', 0x33, 0xCC)
+
+        #if not isinstance(access_code, str) or len(access_code) != 8:
+        #    raise ValueError, "Invalid access_code '%r'" % (access_code,)
         self._access_code = access_code
 
         # accepts messages from the outside world
@@ -119,7 +122,7 @@ class cc1k_mod_pkts(gr.hier_block):
                                   self.cc1k_mod.spb,
                                   self._access_code,
                                   self.pad_for_usrp)
-            #print "pkt =", string_to_hex_list(pkt)
+            print "pkt =", str(map(hex, map(ord, pkt)))
             msg = gr.message_from_string(pkt)
         self.pkt_input.msgq().insert_tail(msg)
 
@@ -220,5 +223,5 @@ class _queue_watcher_thread(_threading.Thread):
             print
             
             if self.callback:
-                self.callback(ok, msg_payload)
+                self.callback(ok, am_group, src_addr, dst_addr, module_src, module_dst, msg_type, msg_payload, crc)
 

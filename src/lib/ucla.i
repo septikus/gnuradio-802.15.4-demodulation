@@ -13,6 +13,7 @@
 #include "ucla_qpsk_modulator_cc.h"
 #include "ucla_delay_cc.h"
 #include "ucla_symbols_to_chips_bi.h"
+#include "ucla_manchester_ff.h"
 #include <stdexcept>
 %}
 
@@ -83,6 +84,17 @@ class ucla_symbols_to_chips_bi : public gr_sync_interpolator
 {
 private:
   ucla_symbols_to_chips_bi ();
+};
+
+
+GR_SWIG_BLOCK_MAGIC(ucla,manchester_ff);
+
+ucla_manchester_ff_sptr ucla_make_manchester_ff ();
+
+class ucla_manchester_ff : public gr_sync_interpolator
+{
+private:
+  ucla_manchester_ff ();
 };
 
 GR_SWIG_BLOCK_MAGIC(ucla,delay_cc);

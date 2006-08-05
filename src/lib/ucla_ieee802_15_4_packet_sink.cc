@@ -41,9 +41,9 @@
 #include <gr_count_bits.h>
 
 // very verbose output for almost each sample
-#define VERBOSE 1
+#define VERBOSE 0
 // less verbose output for higher level debugging
-#define VERBOSE2 1
+#define VERBOSE2 0
 
 static const int DEFAULT_THRESHOLD = 10;  // detect access code with up to DEFAULT_THRESHOLD bits wrong
 

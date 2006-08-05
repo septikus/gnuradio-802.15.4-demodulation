@@ -56,12 +56,21 @@ class cc1k_mod(gr.hier_block):
 	# Turn it into NRZ data.
 	self.nrz = gr.bytes_to_syms()
 
+        # Manchester Encode the whole thing and upsample by 8
+        self.manchester = ucla.manchester_ff()
+
 	# FM modulation
 	self.fmmod = gr.frequency_modulator_fc(sensitivity)
 		
 	# Connect
-	fg.connect(self.nrz, self.fmmod)
+	fg.connect(self.nrz, self.manchester)
+        fg.connect(self.manchester, self.fmmod)
 
+        filesink1 = gr.file_sink(gr.sizeof_float, 'nrz.dat')
+        fg.connect(self.nrz, filesink1)
+        filesink = gr.file_sink(gr.sizeof_float, 'manchester.dat')
+        fg.connect(self.manchester, filesink)
+        
 	# Initialize base class
 	gr.hier_block.__init__(self, fg, self.nrz, self.fmmod)
 
@@ -114,8 +123,8 @@ class cc1k_demod(gr.hier_block):
         # Connect
         fg.connect(self.sub, self.clock_recovery)
         
-        filesink = gr.file_sink(gr.sizeof_float, 'rx_fsk_test.dat')
-        fg.connect(self.clock_recovery, filesink)
+        #filesink = gr.file_sink(gr.sizeof_float, 'rx_fsk_test.dat')
+        #fg.connect(self.clock_recovery, filesink)
         
         # Initialize base class
         gr.hier_block.__init__(self, fg, self.fmdemod, self.clock_recovery)
