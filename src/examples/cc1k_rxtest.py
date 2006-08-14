@@ -159,7 +159,13 @@ class fsk_rx_graph (gr.flow_graph):
             self.st.nright += 1
 
         print "ok = %5r  %d/%d" % (ok, self.st.nright, self.st.npkts)
-        print "  payload: " + str(map(hex, map(ord, payload)))
+        print " am group: " + str(am_group)
+        print "  src_addr: "+str(src_addr)+" dst_addr: "+str(dst_addr)
+        print "  src_module: " + str(module_src) + " dst_module: " + str(module_dst)
+        print "  msg type: " + str(msg_type) + " msg len: " +str(msg_len)
+        print "  msg: " + str(map(hex, map(ord, msg_payload)))
+        print "  crc: " + str(crc)
+        print "  crc_check: 0x" + str(crcClass.hexchecksum())
         print " ------------------------"
 
 class transmit_path:
