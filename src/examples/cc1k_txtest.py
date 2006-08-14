@@ -137,7 +137,7 @@ class transmit_path(gr.flow_graph):
         return self.subdev.set_auto_tr(enable)
         
     def send_pkt(self, payload='', eof=False):
-        return self.packet_transmitter.send_pkt(am_group=1, module_src=128, module_dst=128, dst_addr=65535, src_addr=1, msg_type=32, payload=payload, eof=eof)
+        return self.packet_transmitter.send_pkt(am_group=1, module_src=128, module_dst=128, dst_addr=65535, src_addr=2, msg_type=32, payload=payload, eof=eof)
         
     def bitrate(self):
         return self._bitrate
@@ -156,7 +156,7 @@ def main ():
 
     for i in range(10):
         print "send message %d:"%(i+1,)
-        tx.send_pkt(struct.pack('B', 0x5))
+        tx.send_pkt(struct.pack('B', (i+1)%256))
 
         time.sleep(1)
 

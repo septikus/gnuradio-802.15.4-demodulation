@@ -29,7 +29,7 @@ import Numeric
 
 from gnuradio import gr, packet_utils
 from gnuradio import ucla
-import crc16
+import crc8
 import gnuradio.gr.gr_threading as _threading
 import cc1k
 import struct
@@ -55,11 +55,15 @@ def make_sos_packet(am_group, module_src, module_dst, dst_addr, src_addr, msg_ty
 
     if len(payload) > MAX_PKT_SIZE:
         raise ValueError, "len(payload) must be in [0, %d]" %(MAX_PKT_SIZE)
-    crc = chr(0xfe)
+
     header = ''.join((chr(am_group), chr(module_src), chr(module_dst), chr(dst_addr&0xFF), chr((dst_addr >> 8) & 0xFF), chr(src_addr&0xFF), chr((src_addr >> 8) & 0xFF), chr(msg_type&0xFF), chr((len(payload) & 0xFF))))
     
+    crcClass = crc8.crc8()
+    crc = chr(crcClass.crc(header[1:]+payload))
+    #crc = chr(0xfe)
+
     # create the packet with the syncronization header of 100x '10' in front.
-    pkt = ''.join((25*struct.pack('B', 0xaa), access_code, header, payload, crc))
+    pkt = ''.join((50*struct.pack('B', 0xaa), access_code, header, payload, crc))
 
     return pkt
 
@@ -209,8 +213,8 @@ class _queue_watcher_thread(_threading.Thread):
             msg_payload = payload[9:9+msg_len]
             crc = ord(payload[-1])
 
-            crcClass = crc16.CRC16()
-            crcClass.update(payload[0:9+msg_len])
+            crcClass = crc8.crc8()
+            crcCheck = crcClass.crc(payload[1:9+msg_len])
 
             print " bare msg: " + str(map(hex, map(ord, payload)))
             print " am group: " + str(am_group)
@@ -218,8 +222,8 @@ class _queue_watcher_thread(_threading.Thread):
             print "  src_module: " + str(module_src) + " dst_module: " + str(module_dst)
             print "  msg type: " + str(msg_type) + " msg len: " +str(msg_len)
             print "  msg: " + str(map(hex, map(ord, msg_payload)))
-            print "  crc: " + str(crc)
-            print "  crc_check: 0x" + str(crcClass.hexchecksum())
+            print "  crc: 0x" + str(crc)
+            print "  crc_check: 0x" + str(crcCheck)
             print
             
             if self.callback:
