@@ -153,7 +153,7 @@ class fsk_rx_graph (gr.flow_graph):
         #send a packet...
 
 
-    def rx_callback(self, ok, payload):
+    def rx_callback(self, ok, am_group, src_addr, dst_addr, module_src, module_dst, msg_type, msg_payload, crc):
         self.st.npkts += 1
         if ok:
             self.st.nright += 1
