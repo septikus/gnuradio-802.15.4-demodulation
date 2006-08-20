@@ -115,7 +115,7 @@ class cc1k_mod_pkts(gr.hier_block):
         if eof:
             msg = gr.message(1) # tell self.pkt_input we're not sending any more packets
         else:
-            # print "original_payload =", string_to_hex_list(payload)
+            #print "original_payload =", string_to_hex_list(payload)
             pkt = make_sos_packet(am_group,
                                   module_src,
                                   module_dst,
@@ -202,7 +202,7 @@ class _queue_watcher_thread(_threading.Thread):
             ok = 1
             payload = msg.to_string()
             
-            print "received packet "
+            #print "received packet "
             am_group = ord(payload[0])
             module_src = ord(payload[1])
             module_dst = ord(payload[2])
@@ -216,15 +216,15 @@ class _queue_watcher_thread(_threading.Thread):
             crcClass = crc8.crc8()
             crcCheck = crcClass.crc(payload[1:9+msg_len])
 
-            print " bare msg: " + str(map(hex, map(ord, payload)))
-            print " am group: " + str(am_group)
-            print "  src_addr: "+str(src_addr)+" dst_addr: "+str(dst_addr)
-            print "  src_module: " + str(module_src) + " dst_module: " + str(module_dst)
-            print "  msg type: " + str(msg_type) + " msg len: " +str(msg_len)
-            print "  msg: " + str(map(hex, map(ord, msg_payload)))
-            print "  crc: " + str(crc)
-            print "  crc_check: " + str(crcCheck)
-            print
+            #print " bare msg: " + str(map(hex, map(ord, payload)))
+            #print " am group: " + str(am_group)
+            #print "  src_addr: "+str(src_addr)+" dst_addr: "+str(dst_addr)
+            #print "  src_module: " + str(module_src) + " dst_module: " + str(module_dst)
+            #print "  msg type: " + str(msg_type) + " msg len: " +str(msg_len)
+            #print "  msg: " + str(map(hex, map(ord, msg_payload)))
+            #print "  crc: " + str(crc)
+            #print "  crc_check: " + str(crcCheck)
+            #print
             
             if self.callback:
                 self.callback(ok, am_group, src_addr, dst_addr, module_src, module_dst, msg_type, msg_payload, crc)

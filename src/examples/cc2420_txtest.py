@@ -82,7 +82,7 @@ def main ():
                       help="select USRP Rx side A or B (default=first one with a daughterboard)")
     parser.add_option("-T", "--tx-subdev-spec", type="subdev", default=None,
                       help="select USRP Tx side A or B (default=first one with a daughterboard)")
-    parser.add_option ("-c", "--cordic-freq", type="eng_float", default=2475000000,
+    parser.add_option ("-c", "--cordic-freq", type="eng_float", default=2415000000,
                        help="set Tx cordic frequency to FREQ", metavar="FREQ")
     parser.add_option ("-r", "--data-rate", type="eng_float", default=2000000)
     parser.add_option ("-f", "--filename", type="string",
