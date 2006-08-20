@@ -39,7 +39,7 @@ class crc8:
         for c in msg:
             c = ord(c)
             runningCRC = self.crcByte(runningCRC, c)
-        return runningCRC % 256
+        return runningCRC
     
     def crcByte(self, oldCrc, byte):
         magic = self.crcTable[(oldCrc >> 8 ^ byte) % 256] % 256

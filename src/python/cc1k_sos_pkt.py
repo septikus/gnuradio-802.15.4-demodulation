@@ -59,11 +59,11 @@ def make_sos_packet(am_group, module_src, module_dst, dst_addr, src_addr, msg_ty
     header = ''.join((chr(am_group), chr(module_src), chr(module_dst), chr(dst_addr&0xFF), chr((dst_addr >> 8) & 0xFF), chr(src_addr&0xFF), chr((src_addr >> 8) & 0xFF), chr(msg_type&0xFF), chr((len(payload) & 0xFF))))
     
     crcClass = crc8.crc8()
-    crc = chr(crcClass.crc(header[1:]+payload))
+    crc = struct.pack('H', crcClass.crc(header[1:]+payload))
     #crc = chr(0xfe)
 
     # create the packet with the syncronization header of 100x '10' in front.
-    pkt = ''.join((50*struct.pack('B', 0xaa), access_code, header, payload, crc))
+    pkt = ''.join((20*struct.pack('B', 0xaa), access_code, header, payload, crc, 20*struct.pack('B', 0xaa)))
 
     return pkt
 
@@ -211,7 +211,7 @@ class _queue_watcher_thread(_threading.Thread):
             msg_type = ord(payload[7])
             msg_len = ord(payload[8])
             msg_payload = payload[9:9+msg_len]
-            crc = ord(payload[-1])
+            crc = ord(payload[-2]) + ord(payload[-1])*256
 
             crcClass = crc8.crc8()
             crcCheck = crcClass.crc(payload[1:9+msg_len])
@@ -222,8 +222,8 @@ class _queue_watcher_thread(_threading.Thread):
             print "  src_module: " + str(module_src) + " dst_module: " + str(module_dst)
             print "  msg type: " + str(msg_type) + " msg len: " +str(msg_len)
             print "  msg: " + str(map(hex, map(ord, msg_payload)))
-            print "  crc: 0x" + str(crc)
-            print "  crc_check: 0x" + str(crcCheck)
+            print "  crc: " + str(crc)
+            print "  crc_check: " + str(crcCheck)
             print
             
             if self.callback:

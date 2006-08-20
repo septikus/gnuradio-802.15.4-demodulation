@@ -235,7 +235,7 @@ ucla_sos_packet_sink::work (int noutput_items,
 	  d_payload_cnt++;
 	  d_packet_byte_index = 0;
 
-	  if (d_payload_cnt >= d_packetlen+1){	// packet is filled, including CRC. might do check later in here
+	  if (d_payload_cnt >= d_packetlen+2){	// packet is filled, including 16 bit CRC. might do check later in here
 
 	    // build a message
 	    gr_message_sptr msg = gr_make_message(0, 0, 0, d_packetlen_cnt);  	    

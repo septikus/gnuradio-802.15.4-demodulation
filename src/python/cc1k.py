@@ -51,8 +51,9 @@ class cc1k_mod(gr.hier_block):
             raise TypeError, "sbp must be an integer >= 2"
         self.spb = spb
 
-	sensitivity = (pi / 2) / spb	# phase change per bit = pi / 2
-
+	#sensitivity = (pi / 2) / spb	# phase change per bit = pi / 2
+        sensitivity = 3.5*pi / spb
+        
 	# Turn it into NRZ data.
 	self.nrz = gr.bytes_to_syms()
 

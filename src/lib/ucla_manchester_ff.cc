@@ -46,9 +46,9 @@ ucla_manchester_ff::work (int noutput_items,
       
       if(in[i/16] > 0.0){
 	out1 = 1.0;
-	out2 = -1.0;
+	out2 = 0.0;
       } else {
-	out1 = -1.0;
+	out1 = 0.0;
 	out2 = 1.0;
       }
       //create manchester output and upsample by 8
