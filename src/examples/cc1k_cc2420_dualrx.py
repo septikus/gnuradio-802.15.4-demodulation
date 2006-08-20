@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 
 #
-# Decoder of IEEE 802.15.4 RADIO Packets.
+# Decodes CC1k and CC2420 packets simultaniously. We use
+# 8-bit data streams, thus, the CC1K needs to be near the
+# antenna of the USRP or we don't receive it (signal too
+# weak).
+#
+# We assume that the FLEX2400 is on side A and FL400 on
+# side B!
 #
 # Modified by: Thomas Schmid
 #
@@ -14,19 +20,6 @@ from gnuradio.ucla_blks import cc1k_sos_pkt
 from gnuradio.eng_option import eng_option
 from optparse import OptionParser
 import math, struct, time, sys
-
-def pick_subdevice(u):
-    """
-    The user didn't specify a subdevice on the command line.
-    If there's a daughterboard on A, select A.
-    If there's a daughterboard on B, select B.
-    Otherwise, select A.
-    """
-    if u.db[0][0].dbid() >= 0:       # dbid is < 0 if there's no d'board or a problem
-        return (0, 0)
-    if u.db[1][0].dbid() >= 0:
-        return (1, 0)
-    return (0, 0)
 
 class stats(object):
     def __init__(self):
@@ -55,8 +48,6 @@ class rx_graph (gr.flow_graph):
         self.fs = self.data_rate * self.samples_per_symbol
         payload_size = 128             # bytes
 
-        print "data_rate = ", eng_notation.num_to_str(self.data_rate)
-        print "samples_per_symbol = ", self.samples_per_symbol
         print "usrp_decim = ", self.usrp_decim
         print "fs = ", eng_notation.num_to_str(self.fs)
 
