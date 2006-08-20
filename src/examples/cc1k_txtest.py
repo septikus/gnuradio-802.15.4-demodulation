@@ -154,7 +154,7 @@ def main ():
 
     tx.start()
 
-    for i in range(10):
+    for i in range(100):
         print "send message %d:"%(i+1,)
         tx.send_pkt(struct.pack('B', (i+1)%256))
 
