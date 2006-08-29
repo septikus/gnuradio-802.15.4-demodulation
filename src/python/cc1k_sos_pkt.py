@@ -126,7 +126,7 @@ class cc1k_mod_pkts(gr.hier_block):
                                   self.cc1k_mod.spb,
                                   self._access_code,
                                   self.pad_for_usrp)
-            print "pkt =", str(map(hex, map(ord, pkt)))
+            #print "pkt =", str(map(hex, map(ord, pkt)))
             msg = gr.message_from_string(pkt)
         self.pkt_input.msgq().insert_tail(msg)
 
@@ -225,7 +225,7 @@ class _queue_watcher_thread(_threading.Thread):
             #print "  crc: " + str(crc)
             #print "  crc_check: " + str(crcCheck)
             #print
-            
+            ok = (crc == crc_Check)
             if self.callback:
                 self.callback(ok, am_group, src_addr, dst_addr, module_src, module_dst, msg_type, msg_payload, crc)
 

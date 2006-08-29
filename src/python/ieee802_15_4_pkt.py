@@ -187,7 +187,7 @@ class ieee802_15_4_mod_pkts(gr.hier_block):
                                            addressInfo,
                                            payload,
                                            self.pad_for_usrp)
-            print "pkt =", packet_utils.string_to_hex_list(pkt), len(pkt)
+            #print "pkt =", packet_utils.string_to_hex_list(pkt), len(pkt)
             msg = gr.message_from_string(pkt)
         self.pkt_input.msgq().insert_tail(msg)
 
@@ -244,13 +244,19 @@ class _queue_watcher_thread(_threading.Thread):
 
     def run(self):
         while self.keep_running:
-            print "802_15_4_pkt: waiting for packet"
+            #print "802_15_4_pkt: waiting for packet"
             msg = self.rcvd_pktq.delete_head()
-            ok = 1
+            ok = 0
             payload = msg.to_string()
             
-            print "received packet "
+            #print "received packet "
+	    crc = crc16.CRC16()
+	    crc.update(payload[:-2])
 
+	    crc_check = crc.intchecksum()
+	    #print "checksum: %s, received: %s"%(crc_check, str(ord(payload[-2]) + ord(payload[-1])*256))
+	    if len(payload) > 2:
+                ok = (crc_check == ord(payload[-2]) + ord(payload[-1])*256)
             msg_payload = payload
             
             if self.callback:
