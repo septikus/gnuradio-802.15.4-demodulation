@@ -187,7 +187,7 @@ class ieee802_15_4_mod_pkts(gr.hier_block):
                                            addressInfo,
                                            payload,
                                            self.pad_for_usrp)
-            #print "pkt =", packet_utils.string_to_hex_list(pkt), len(pkt)
+             #print "pkt =", packet_utils.string_to_hex_list(pkt), len(pkt)
             msg = gr.message_from_string(pkt)
         self.pkt_input.msgq().insert_tail(msg)
 

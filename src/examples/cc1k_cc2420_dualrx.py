@@ -30,7 +30,7 @@ class stats(object):
 class rx_graph (gr.flow_graph):
     def __init__(self, rx_callback_cc2420, rx_callback_cc1k):
         gr.flow_graph.__init__(self)
-        cc2420_cordic_freq = 2415000000
+        cc2420_cordic_freq = 2475000000
         cc2420_data_rate = 2000000
         cc1k_cordic_freq = 434845200
         cc1k_data_rate = 38400
@@ -98,30 +98,36 @@ class rx_graph (gr.flow_graph):
                                                         p_size=payload_size,
                                                         threshold=-1)
         
-        self.squelch2 = gr.pwr_squelch_cc(50, 1, 0, True)
+        #self.squelch2 = gr.pwr_squelch_cc(50, 1, 0, True)
         keep = gr.keep_one_in_n(gr.sizeof_gr_complex, 13)
-        self.connect((di, 1), keep, self.squelch2, self.packet_receiver_cc1k)
+        #self.connect((di, 1), keep, self.squelch2, self.packet_receiver_cc1k)
+        self.connect((di, 1), keep, self.packet_receiver_cc1k)
         
 def main ():
 
     def rx_callback_cc2420(ok, payload):
         st_cc2420.npkts += 1
+        print " ------------------------"
         if ok:
             st_cc2420.nright += 1
 
-        (pktno,) = struct.unpack('!B', payload[2:3])
-        print "ok = %5r  pktno = %4d  len(payload) = %4d  cc2420 pkts: %d/%d" % (ok, pktno, len(payload),
-                                                                    st_cc2420.nright, st_cc2420.npkts)
-        (am_group, addr_mode, dst_addr, src_addr, module_dst, module_src, msg_type) = struct.unpack("HHHHBBB", payload[0:11])
-        msg_payload = payload[11:-2]
-        (crc, ) = struct.unpack("!H", payload[-2:])
-
-        print " am group: " + str(am_group)
-        print "  src_addr: "+str(src_addr)+" dst_addr: "+str(dst_addr)
-        print "  src_module: " + str(module_src) + " dst_module: " + str(module_dst)
-        print "  msg type: " + str(msg_type)
-        print "  msg: " + str(map(hex, map(ord, msg_payload)))
-        print "  crc: " + str(hex(crc))
+            (pktno,) = struct.unpack('!B', payload[2:3])
+            print "ok = %5r  pktno = %4d  len(payload) = %4d  cc2420 pkts: %d/%d" % (ok, pktno, len(payload),
+                                                                                     st_cc2420.nright, st_cc2420.npkts)
+            # for the sos head
+            #(am_group, addr_mode, dst_addr, src_addr, module_dst, module_src, msg_type) = struct.unpack("HHHHBBB", payload[0:11])
+            (am_group, module_dst, module_src, dst_addr, src_addr, msg_type) = struct.unpack("<BBBHHB", payload[11:19])
+            msg_payload = payload[19:-2]
+            (crc, ) = struct.unpack("!H", payload[-2:])
+            
+            print " am group: " + str(am_group)
+            print "  src_addr: "+str(src_addr)+" dst_addr: "+str(dst_addr)
+            print "  src_module: " + str(module_src) + " dst_module: " + str(module_dst)
+            print "  msg type: " + str(msg_type)
+            print "  msg: " + str(map(hex, map(ord, payload[20:-2])))
+            print "  crc: " + str(hex(crc))
+        else:
+            print "ok = %5r pkts: %d/%d" % (ok, st_cc2420.nright, st_cc2420.npkts)
         print " ------------------------"
         sys.stdout.flush()
 
@@ -130,13 +136,16 @@ def main ():
         if ok:
             st_cc1k.nright += 1
 
-        print "ok = %5r  cc1k pkts: %d/%d" % (ok, st_cc1k.nright, st_cc1k.npkts)
-        print " am group: " + str(am_group)
-        print "  src_addr: "+str(src_addr)+" dst_addr: "+str(dst_addr)
-        print "  src_module: " + str(module_src) + " dst_module: " + str(module_dst)
-        print "  msg type: " + str(msg_type)
-        print "  msg: " + str(map(hex, map(ord, msg_payload)))
-        print "  crc: " + str(crc)
+            print "ok = %5r  cc1k pkts: %d/%d" % (ok, st_cc1k.nright, st_cc1k.npkts)
+            print " am group: " + str(am_group)
+            print "  src_addr: "+str(src_addr)+" dst_addr: "+str(dst_addr)
+            print "  src_module: " + str(module_src) + " dst_module: " + str(module_dst)
+            print "  msg type: " + str(msg_type)
+            print "  msg: " + str(map(hex, map(ord, msg_payload)))
+            print "  crc: " + str(crc)
+        else:
+            print "ok = %5r pkts: %d/%d" % (ok, st_cc2420.nright, st_cc2420.npkts)
+
         print " ++++++++++++++++++++++++"
 
         
