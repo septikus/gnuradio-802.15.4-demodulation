@@ -143,7 +143,7 @@ class fsk_rx_graph (gr.flow_graph):
         self.connect(u, self.packet_receiver)
             
         self.filesink = gr.file_sink(gr.sizeof_gr_complex, 'rx_test.dat')
-        self.connect(u, self.filesink)
+        #self.connect(u, self.filesink)
         
         if 0 and not(options.no_gui):
             fft_input = fftsink.fft_sink_c (self, panel, title="Input", fft_size=512, sample_rate=self.fs)
