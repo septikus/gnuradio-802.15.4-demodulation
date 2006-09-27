@@ -1,4 +1,3 @@
-#
 # Copyright 2005 Free Software Foundation, Inc.
 # 
 # This file is part of GNU Radio
@@ -197,7 +196,7 @@ class _queue_watcher_thread(_threading.Thread):
         
     def run(self):
         while self.keep_running:
-            print "cc1k_sos_pkt: waiting for packet"
+            #print "cc1k_sos_pkt: waiting for packet"
             msg = self.rcvd_pktq.delete_head()
             ok = 1
             payload = msg.to_string()
@@ -225,7 +224,7 @@ class _queue_watcher_thread(_threading.Thread):
             #print "  crc: " + str(crc)
             #print "  crc_check: " + str(crcCheck)
             #print
-            ok = (crc == crc_Check)
+            ok = (crc == crcCheck)
             if self.callback:
                 self.callback(ok, am_group, src_addr, dst_addr, module_src, module_dst, msg_type, msg_payload, crc)
 
