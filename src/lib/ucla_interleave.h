@@ -20,37 +20,48 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef INCLUDED_GR_INTERLEAVE_H
-#define INCLUDED_GR_INTERLEAVE_H
+/**
+ * This is a modification of the gr_interleave from GNURadio.
+ *
+ * Modified by: Thomas Schmid <thomas.schmid@ucla.edu>
+ */
+
+#ifndef INCLUDED_UCLA_INTERLEAVE_H
+#define INCLUDED_UCLA_INTERLEAVE_H
 
 #include <gr_sync_interpolator.h>
 
-class gr_interleave;
-typedef boost::shared_ptr<gr_interleave> gr_interleave_sptr;
+class ucla_interleave;
+typedef boost::shared_ptr<ucla_interleave> ucla_interleave_sptr;
 
-gr_interleave_sptr gr_make_interleave (size_t itemsize);
+ucla_interleave_sptr gr_make_interleave (size_t itemsize);
 
 /*!
  * \brief interleave N inputs to a single output
  * \ingroup block
  */
-class gr_interleave : public gr_sync_interpolator
+class ucla_interleave : public gr_block
 {
-  friend gr_interleave_sptr gr_make_interleave (size_t itemsize);
+  friend ucla_interleave_sptr ucla_make_interleave (size_t itemsize);
 
   size_t	d_itemsize;
 
-  gr_interleave (size_t itemsize);
+  ucla_interleave (size_t itemsize);
 
 public:
-  ~gr_interleave ();
+  ~ucla_interleave ();
 
   int work (int noutput_items,
 	    gr_vector_const_void_star &input_items,
 	    gr_vector_void_star &output_items);
 
-  bool check_topology (int ninputs, int noutputs);
+  // gr_sync_block overrides these to assist work
+  void forecast (int noutput_items, gr_vector_int &ninput_items_required);
+  int  general_work (int noutput_items,
+		     gr_vector_int &ninput_items,
+		     gr_vector_const_void_star &input_items,
+		     gr_vector_void_star &output_items);
 
 };
 
-#endif /* INCLUDED_GR_INTERLEAVE_H */
+#endif /* INCLUDED_UCLA_INTERLEAVE_H */

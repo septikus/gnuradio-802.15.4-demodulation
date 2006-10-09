@@ -24,40 +24,54 @@
 #include "config.h"
 #endif
 
-#include <gr_interleave.h>
+#include <ucla_interleave.h>
 #include <gr_io_signature.h>
 #include <string.h>
 
 
-gr_interleave_sptr
-gr_make_interleave (size_t itemsize)
+ucla_interleave_sptr
+ucla_make_interleave (size_t itemsize)
 {
-  return gr_interleave_sptr (new gr_interleave (itemsize));
+  return ucla_interleave_sptr (new ucla_interleave (itemsize));
 }
 
-gr_interleave::gr_interleave (size_t itemsize)
-  : gr_sync_interpolator ("interleave",
-			  gr_make_io_signature (1, gr_io_signature::IO_INFINITE, itemsize),
-			  gr_make_io_signature (1, 1, itemsize),
-			  1),
+ucla_interleave::ucla_interleave (size_t itemsize)
+  : gr_block ("interleave",
+	      gr_make_io_signature (1, gr_io_signature::IO_INFINITE, itemsize),
+	      gr_make_io_signature (1, 1, itemsize)
+	      ),
     d_itemsize (itemsize)
 {
 }
 
-gr_interleave::~gr_interleave ()
+ucla_interleave::~ucla_interleave ()
 {
   // NOP
 }
 
-bool
-gr_interleave::check_topology (int ninputs, int noutputs)
+void
+ucla_interleave::forecast (int noutput_items, gr_vector_int &ninput_items_required)
 {
-  set_interpolation (ninputs);
-  return true;
+  unsigned ninputs = ninput_items_required.size();
+  for (unsigned i = 0; i < ninputs; i++)
+    ninput_items_required[i] = 0;
 }
 
 int
-gr_interleave::work (int noutput_items,
+gr_sync_block::general_work (int noutput_items,
+			     gr_vector_int &ninput_items,
+			     gr_vector_const_void_star &input_items,
+			     gr_vector_void_star &output_items)
+{
+  size_t nchan = input_items.size ();
+  int	r = work (noutput_items, input_items, output_items);
+  if (r > 0)
+    consume_each (r);
+  return r;
+}
+
+int
+ucla_interleave::work (int noutput_items,
 		     gr_vector_const_void_star &input_items,
 		     gr_vector_void_star &output_items)
 {
