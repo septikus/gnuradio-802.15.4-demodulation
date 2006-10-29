@@ -22,24 +22,24 @@
 
 // WARNING: this file is machine generated.  Edits will be over written
 
-#ifndef INCLUDED_GR_SIG_SOURCE_F_H
-#define INCLUDED_GR_SIG_SOURCE_F_H
+#ifndef INCLUDED_UCLA_SIG_SOURCE_F_H
+#define INCLUDED_UCLA_SIG_SOURCE_F_H
 
 #include <gr_sync_block.h>
-#include <gr_sig_source_waveform.h>
+#include <ucla_sig_source_waveform.h>
 #include <gr_fxpt_nco.h>
 
-class gr_sig_source_f;
-typedef boost::shared_ptr<gr_sig_source_f> gr_sig_source_f_sptr;
+class ucla_sig_source_f;
+typedef boost::shared_ptr<ucla_sig_source_f> ucla_sig_source_f_sptr;
 
 /*!
  * \brief signal generator with float output.
  * \ingroup source
  */
 
-class gr_sig_source_f : public gr_sync_block {
-  friend gr_sig_source_f_sptr 
-  gr_make_sig_source_f (double sampling_freq, gr_waveform_t waveform,
+class ucla_sig_source_f : public gr_sync_block {
+  friend ucla_sig_source_f_sptr 
+  ucla_make_sig_source_f (double sampling_freq, gr_waveform_t waveform,
 		       double frequency, double ampl, float offset);
 
   double		d_sampling_freq;
@@ -50,7 +50,7 @@ class gr_sig_source_f : public gr_sync_block {
   gr_fxpt_nco		d_nco;
 
 
-  gr_sig_source_f (double sampling_freq, gr_waveform_t waveform,
+  ucla_sig_source_f (double sampling_freq, gr_waveform_t waveform,
 	  double wave_freq, double ampl, float offset);
 
  public:
@@ -73,8 +73,8 @@ class gr_sig_source_f : public gr_sync_block {
   void set_offset (float offset);
 };
 
-gr_sig_source_f_sptr
-gr_make_sig_source_f (double sampling_freq, gr_waveform_t waveform,
+ucla_sig_source_f_sptr
+ucla_make_sig_source_f (double sampling_freq, gr_waveform_t waveform,
 		     double wave_freq, double ampl, float offset = 0);
 
 
