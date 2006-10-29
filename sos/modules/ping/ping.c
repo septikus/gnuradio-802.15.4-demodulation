@@ -12,7 +12,9 @@
 #define LED_DEBUG
 #include <led_dbg.h>
 
-#define PING_TIMER_INTERVAL	1024L
+#ifndef PING_TIMER_INTERVAL
+#define PING_TIMER_INTERVAL	256L
+#endif
 #define PING_TID               0
 
 #define PINGER_ID    DFLT_APP_ID0

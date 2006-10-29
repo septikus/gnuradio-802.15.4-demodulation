@@ -24,19 +24,19 @@
 #include "config.h"
 #endif
 
-#include <ucla_interleave.h>
+#include <ucla_multichanneladd_cc.h>
 #include <gr_io_signature.h>
 #include <string.h>
 
 
-ucla_interleave_sptr
-ucla_make_interleave (size_t itemsize)
+ucla_multichanneladd_cc_sptr
+ucla_make_multichanneladd_cc (size_t itemsize)
 {
-  return ucla_interleave_sptr (new ucla_interleave (itemsize));
+  return ucla_multichanneladd_cc_sptr (new ucla_multichanneladd_cc (itemsize));
 }
 
-ucla_interleave::ucla_interleave (size_t itemsize)
-  : gr_block ("interleave",
+ucla_multichanneladd_cc::ucla_multichanneladd_cc (size_t itemsize)
+  : gr_block ("multichanneladd_cc",
 	      gr_make_io_signature (1, gr_io_signature::IO_INFINITE, itemsize),
 	      gr_make_io_signature (1, 1, itemsize)
 	      ),
@@ -44,13 +44,13 @@ ucla_interleave::ucla_interleave (size_t itemsize)
 {
 }
 
-ucla_interleave::~ucla_interleave ()
+ucla_multichanneladd_cc::~ucla_multichanneladd_cc ()
 {
   // NOP
 }
 
 void
-ucla_interleave::forecast (int noutput_items, gr_vector_int &ninput_items_required)
+ucla_multichanneladd_cc::forecast (int noutput_items, gr_vector_int &ninput_items_required)
 {
   unsigned ninputs = ninput_items_required.size();
   for (unsigned i = 0; i < ninputs; i++)
@@ -58,7 +58,7 @@ ucla_interleave::forecast (int noutput_items, gr_vector_int &ninput_items_requir
 }
 
 int
-gr_sync_block::general_work (int noutput_items,
+ucla_multichanneladd_cc::general_work (int noutput_items,
 			     gr_vector_int &ninput_items,
 			     gr_vector_const_void_star &input_items,
 			     gr_vector_void_star &output_items)
@@ -71,7 +71,7 @@ gr_sync_block::general_work (int noutput_items,
 }
 
 int
-ucla_interleave::work (int noutput_items,
+ucla_multichanneladd_cc::work (int noutput_items,
 		     gr_vector_const_void_star &input_items,
 		     gr_vector_void_star &output_items)
 {

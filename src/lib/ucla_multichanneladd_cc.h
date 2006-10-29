@@ -21,35 +21,35 @@
  */
 
 /**
- * This is a modification of the gr_interleave from GNURadio.
+ * This is a modification of the gr_multichanneladd_cc from GNURadio.
  *
  * Modified by: Thomas Schmid <thomas.schmid@ucla.edu>
  */
 
-#ifndef INCLUDED_UCLA_INTERLEAVE_H
-#define INCLUDED_UCLA_INTERLEAVE_H
+#ifndef INCLUDED_UCLA_MULTICHANNELADD_CC_H
+#define INCLUDED_UCLA_MULTICHANNELADD_CC_H
 
 #include <gr_sync_interpolator.h>
 
-class ucla_interleave;
-typedef boost::shared_ptr<ucla_interleave> ucla_interleave_sptr;
+class ucla_multichanneladd_cc;
+typedef boost::shared_ptr<ucla_multichanneladd_cc> ucla_multichanneladd_cc_sptr;
 
-ucla_interleave_sptr gr_make_interleave (size_t itemsize);
+ucla_multichanneladd_cc_sptr gr_make_multichanneladd_cc (size_t itemsize);
 
 /*!
- * \brief interleave N inputs to a single output
+ * \brief multichanneladd_cc N inputs to a single output
  * \ingroup block
  */
-class ucla_interleave : public gr_block
+class ucla_multichanneladd_cc : public gr_block
 {
-  friend ucla_interleave_sptr ucla_make_interleave (size_t itemsize);
+  friend ucla_multichanneladd_cc_sptr ucla_make_multichanneladd_cc (size_t itemsize);
 
   size_t	d_itemsize;
 
-  ucla_interleave (size_t itemsize);
+  ucla_multichanneladd_cc (size_t itemsize);
 
 public:
-  ~ucla_interleave ();
+  ~ucla_multichanneladd_cc ();
 
   int work (int noutput_items,
 	    gr_vector_const_void_star &input_items,
@@ -64,4 +64,4 @@ public:
 
 };
 
-#endif /* INCLUDED_UCLA_INTERLEAVE_H */
+#endif /* INCLUDED_UCLA_MULTICHANNELADD_CC_H */
