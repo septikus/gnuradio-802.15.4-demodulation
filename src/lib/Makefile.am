@@ -68,6 +68,7 @@ _ucla_la_SOURCES = 			\
 	ucla_symbols_to_chips_bi.cc     \
 	ucla_manchester_ff.cc     \
 	ucla_multichanneladd_cc.cc          \
+	ucla_signal_source_f.cc \
 	ucla_delay_cc.cc
 
 # magic flags
@@ -91,6 +92,7 @@ grinclude_HEADERS =			\
 	ucla_symbols_to_chips_bi.h      \
 	ucla_manchester_ff.h      \
 	ucla_multichanneladd_cc.h         \
+	ucla_signal_source_f.h         \
 	ucla_delay_cc.h
 
 

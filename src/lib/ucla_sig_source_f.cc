@@ -25,14 +25,14 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <gr_sig_source_f.h>
+#include <ucla_sig_source_f.h>
 #include <algorithm>
 #include <gr_io_signature.h>
 #include <stdexcept>
 #include <gr_complex.h>
 
 
-gr_sig_source_f::gr_sig_source_f (double sampling_freq, gr_waveform_t waveform,
+ucla_sig_source_f::ucla_sig_source_f (double sampling_freq, gr_waveform_t waveform,
 		double frequency, double ampl, float offset)
   : gr_sync_block ("sig_source_f",
 		   gr_make_io_signature (0, 0, 0),
@@ -43,15 +43,15 @@ gr_sig_source_f::gr_sig_source_f (double sampling_freq, gr_waveform_t waveform,
   d_nco.set_freq (2 * M_PI * d_frequency / d_sampling_freq);
 }
 
-gr_sig_source_f_sptr
-gr_make_sig_source_f (double sampling_freq, gr_waveform_t waveform,
+ucla_sig_source_f_sptr
+ucla_make_sig_source_f (double sampling_freq, gr_waveform_t waveform,
 		     double frequency, double ampl, float offset)
 {
-  return gr_sig_source_f_sptr (new gr_sig_source_f (sampling_freq, waveform, frequency, ampl, offset));
+  return ucla_sig_source_f_sptr (new ucla_sig_source_f (sampling_freq, waveform, frequency, ampl, offset));
 }
 
 int
-gr_sig_source_f::work (int noutput_items,
+ucla_sig_source_f::work (int noutput_items,
 		    gr_vector_const_void_star &input_items,
 		    gr_vector_void_star &output_items)
 {
@@ -109,40 +109,40 @@ gr_sig_source_f::work (int noutput_items,
 #endif
 
   default:
-    throw std::runtime_error ("gr_sig_source: invalid waveform");
+    throw std::runtime_error ("ucla_sig_source: invalid waveform");
   }
 
   return noutput_items;
 }
 
 void
-gr_sig_source_f::set_sampling_freq (double sampling_freq)
+ucla_sig_source_f::set_sampling_freq (double sampling_freq)
 {
   d_sampling_freq = sampling_freq;
   d_nco.set_freq (2 * M_PI * d_frequency / d_sampling_freq);
 }
 
 void
-gr_sig_source_f::set_waveform (gr_waveform_t waveform)
+ucla_sig_source_f::set_waveform (gr_waveform_t waveform)
 {
   d_waveform = waveform;
 }
 
 void
-gr_sig_source_f::set_frequency (double frequency)
+ucla_sig_source_f::set_frequency (double frequency)
 {
   d_frequency = frequency;
   d_nco.set_freq (2 * M_PI * d_frequency / d_sampling_freq);
 }
 
 void
-gr_sig_source_f::set_amplitude (double ampl)
+ucla_sig_source_f::set_amplitude (double ampl)
 {
   d_ampl = ampl;
 }
 
 void
-gr_sig_source_f::set_offset (float offset)
+ucla_sig_source_f::set_offset (float offset)
 {
   d_offset = offset;
 }

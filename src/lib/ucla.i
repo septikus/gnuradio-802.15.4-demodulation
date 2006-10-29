@@ -11,6 +11,8 @@
 #include "ucla_sos_packet_sink.h"
 #include "ucla_ieee802_15_4_packet_sink.h"
 #include "ucla_qpsk_modulator_cc.h"
+#include "ucla_signal_source_f.h"
+#include "ucla_signal_source_waveform.h"
 #include "ucla_delay_cc.h"
   //#include "ucla_interleave.h"
 #include "ucla_multichanneladd_cc.h"
@@ -99,6 +101,7 @@ private:
   ucla_manchester_ff ();
 };
 
+
 GR_SWIG_BLOCK_MAGIC(ucla,delay_cc);
 
 ucla_delay_cc_sptr ucla_make_delay_cc (const int delay);
@@ -107,6 +110,17 @@ class ucla_delay_cc : public gr_sync_block
 {
 private:
   ucla_delay_cc ();
+};
+
+
+GR_SWIG_BLOCK_MAGIC(ucla,signal_source_f);
+
+ucla_signal_source_f_sptr ucla_make_signal_source_f (double sampling_freq, gr_waveform_t waveform, double frequency, double ampl, float offset);
+
+class ucla_signal_source_f : public gr_sync_block
+{
+private:
+  ucla_signal_source_f ();
 };
 
 /*
@@ -123,7 +137,7 @@ private:
 
 GR_SWIG_BLOCK_MAGIC(ucla,multichanneladd_cc);
 
-ucla_multichanneladd_cc_sptr ucla_make_multichanneladd_cc (const int delay);
+ucla_multichanneladd_cc_sptr ucla_make_multichanneladd_cc (size_t itemsize);
 
 class ucla_multichanneladd_cc : public gr_block
 {
