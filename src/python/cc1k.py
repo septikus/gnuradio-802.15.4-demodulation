@@ -67,10 +67,10 @@ class cc1k_mod(gr.hier_block):
 	fg.connect(self.nrz, self.manchester)
         fg.connect(self.manchester, self.fmmod)
 
-        filesink1 = gr.file_sink(gr.sizeof_float, 'nrz.dat')
-        fg.connect(self.nrz, filesink1)
-        filesink = gr.file_sink(gr.sizeof_float, 'manchester.dat')
-        fg.connect(self.manchester, filesink)
+        #filesink1 = gr.file_sink(gr.sizeof_float, 'nrz.dat')
+        #fg.connect(self.nrz, filesink1)
+        #filesink = gr.file_sink(gr.sizeof_float, 'manchester.dat')
+        #fg.connect(self.manchester, filesink)
         
 	# Initialize base class
 	gr.hier_block.__init__(self, fg, self.nrz, self.fmmod)

@@ -34,7 +34,8 @@
 
 #
 # This is a multi channel transmitter. It transmits indipendently on
-# two different channels of the CC1K.
+# two different channels of the CC1K. Packet transmitter1 is on the
+# higher of the two frequencies, packet transmitter 2 is the lower one.
 #
 # Modified by: Thomas Schmid
 #
@@ -114,43 +115,62 @@ class transmit_path(gr.flow_graph):
 
         if options.cordic_freq1 < options.cordic_freq2:
             self.usrp_freq = options.cordic_freq1
-            self.freq_diff = options.cordic_freq1 - options.cordic_freq2
+            self.freq_diff = options.cordic_freq2 - options.cordic_freq1
         else:
             self.usrp_freq = options.cordic_freq2
-            self.freq_diff = options.cordic_freq2 - options.cordic_freq1
+            self.freq_diff = options.cordic_freq1 - options.cordic_freq2
+        print "freq_diff = ", eng_notation.num_to_str(self.freq_diff)
 
         self.u.tune(self.subdev._which, self.subdev, self.usrp_freq)
-        print "tune USRP to = ", self.usrp_freq
+        print "tune USRP to = ", eng_notation.num_to_str(self.usrp_freq)
         self.u.set_pga(0, options.gain)
         self.u.set_pga(1, options.gain)
 
-        interp_factor = self.fs / self.channel_fs
+        interp_factor = int(self.fs / self.channel_fs)
         quad_rate = self.fs
+        print "interp_factor = ", interp_factor
         
         # Create filter for the interpolation
         interp_taps = gr.firdes.low_pass (interp_factor,   # gain
-                                          quad_rate,       # Fs
-                                          self.channel_fs, # low pass cutoff freq
-                                          self.channel_fs*0.2,# width of trans. band
+                                          self.channel_fs*interp_factor,       # Fs
+                                          self.channel_fs/2, # low pass cutoff freq
+                                          self.channel_fs*0.1,# width of trans. band
                                           gr.firdes.WIN_HANN) #filter type
 
-        print "len(rx_chan_coeffs) =", len(interp_taps)
+        print "len(interp_taps) =", len(interp_taps)
 
         self.interpolator1 = gr.interp_fir_filter_ccc(interp_factor, interp_taps)
-        self.interpolator1 = gr.interp_fir_filter_ccc(interp_factor, interp_taps)
+        self.interpolator2 = gr.interp_fir_filter_ccc(interp_factor, interp_taps)
 
-        self.multiplicator = 
+        self.multiplicator = gr.multiply_cc()
 
-        self.sin = gr.sig_source_c(self.fs, gr.SIN_WAVE, self.freq_diff, 1, 0)
+        self.adder = gr.add_cc()
+        
+        self.sin = gr.sig_source_c(self.channel_fs * interp_factor, gr.GR_SIN_WAVE, self.freq_diff, 1, complex(0, 0))
 
         # transmitter
-        self.packet_transmitter = cc1k_sos_pkt.cc1k_mod_pkts(self, spb=self.samples_per_symbol, msgq_limit=2)
+        self.packet_transmitter1 = cc1k_sos_pkt.cc1k_mod_pkts(self, spb=self.samples_per_symbol, msgq_limit=2)
+        #self.packet_transmitter2 = cc1k_sos_pkt.cc1k_mod_pkts(self, spb=self.samples_per_symbol, msgq_limit=2)
+
         self.amp = gr.multiply_const_cc (self.normal_gain)
         self.filesink = gr.file_sink(gr.sizeof_gr_complex, 'tx_test.dat')
-        
-        self.connect(self.amp, self.filesink)
-        self.connect(self.packet_transmitter, self.amp, self.u)
+        self.filesink2 = gr.file_sink(gr.sizeof_gr_complex, 'tx_test2.dat')
+        self.filesink3 = gr.file_sink(gr.sizeof_gr_complex, 'tx_test3.dat')
 
+        # interpolate the two transmitters
+        self.connect(self.packet_transmitter1, self.interpolator1)
+        #self.connect(self.packet_transmitter2, self.interpolator2)
+        # upconvert the first transmitter)
+        self.connect(self.interpolator1, (self.multiplicator, 1))
+        self.connect(self.sin, (self.multiplicator, 0))
+        # add the two signals
+        #self.connect(self.multiplicator, (self.adder, 0))
+        #self.connect(self.interpolator2, (self.adder, 1))
+        # send the signal to the USRP
+        self.connect(self.interpolator1, self.amp, self.filesink)
+        self.connect(self.multiplicator, self.filesink2)
+        self.connect(self.sin, self.filesink3)
+        
         self.set_gain(self.subdev.gain_range()[1])  # set max Tx gain
         self.set_auto_tr(True)                      # enable Auto Transmit/Receive switching
 
@@ -161,8 +181,11 @@ class transmit_path(gr.flow_graph):
     def set_auto_tr(self, enable):
         return self.subdev.set_auto_tr(enable)
         
-    def send_pkt(self, payload='', eof=False):
-        return self.packet_transmitter.send_pkt(am_group=1, module_src=128, module_dst=128, dst_addr=65535, src_addr=2, msg_type=32, payload=payload, eof=eof)
+    def send_pkt1(self, payload='', eof=False):
+        return self.packet_transmitter1.send_pkt(am_group=1, module_src=128, module_dst=128, dst_addr=65535, src_addr=2, msg_type=32, payload=payload, eof=eof)
+    
+    def send_pkt2(self, payload='', eof=False):
+        return self.packet_transmitter2.send_pkt(am_group=1, module_src=128, module_dst=128, dst_addr=65535, src_addr=2, msg_type=32, payload=payload, eof=eof)
         
     def bitrate(self):
         return self._bitrate
@@ -181,9 +204,10 @@ def main ():
 
     for i in range(100):
         print "send message %d:"%(i+1,)
-        tx.send_pkt(struct.pack('B', (i+1)%256))
+        tx.send_pkt1(struct.pack('B', (i+1)%256))
+        #tx.send_pkt2(struct.pack('B', (i+1)%256))
 
-        time.sleep(1)
+        time.sleep(0.05)
 
 
     

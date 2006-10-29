@@ -12,7 +12,7 @@
 #include "ucla_ieee802_15_4_packet_sink.h"
 #include "ucla_qpsk_modulator_cc.h"
 #include "ucla_delay_cc.h"
-#include "ucla_interleave.h"
+  //#include "ucla_interleave.h"
 #include "ucla_multichanneladd_cc.h"
 #include "ucla_symbols_to_chips_bi.h"
 #include "ucla_manchester_ff.h"
@@ -109,6 +109,7 @@ private:
   ucla_delay_cc ();
 };
 
+/*
 GR_SWIG_BLOCK_MAGIC(ucla,interleave);
 
 ucla_interleave_sptr ucla_make_interleave (const int delay);
@@ -118,6 +119,7 @@ class ucla_interleave : public gr_block
 private:
   ucla_interleave ();
 };
+*/
 
 GR_SWIG_BLOCK_MAGIC(ucla,multichanneladd_cc);
 

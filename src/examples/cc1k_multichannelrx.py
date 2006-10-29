@@ -168,6 +168,8 @@ class fsk_rx_graph (gr.flow_graph):
                                                         p_size=payload_size,
                                                         threshold=-1)
 
+
+        u = gr.file_source(gr.sizeof_gr_complex, 'tx_test.dat')
         self.connect(u, self.ddc1, self.packet_receiver1)
         self.connect(u, self.ddc2, self.packet_receiver2)
         

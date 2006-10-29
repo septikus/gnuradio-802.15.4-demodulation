@@ -225,7 +225,7 @@ class _queue_watcher_thread(_threading.Thread):
             #print "  crc: " + str(crc)
             #print "  crc_check: " + str(crcCheck)
             #print
-            ok = (crc == crc_Check)
+            ok = (crc == crcCheck)
             if self.callback:
                 self.callback(ok, am_group, src_addr, dst_addr, module_src, module_dst, msg_type, msg_payload, crc)
 
