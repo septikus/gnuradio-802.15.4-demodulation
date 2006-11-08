@@ -121,7 +121,7 @@ class transmit_path(gr.flow_graph):
         
     def send_pkt(self, payload='', eof=False):
         self.pktno += 1
-        return self.packet_transmitter.send_pkt(self.pktno%256, struct.pack("HHHH", 0xFFFF, 0xFFFF, 0xa, 0xa), payload, eof)
+        return self.packet_transmitter.send_pkt(self.pktno%256, struct.pack("HHHH", 0xFFFF, 0xFFFF, 0xb , 0xb), payload, eof)
 
 
 
