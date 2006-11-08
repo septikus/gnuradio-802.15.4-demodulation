@@ -105,7 +105,7 @@ def _npadding_bytes(pkt_byte_len, spb):
         return 0
     return byte_modulus - r
 
-def make_FCF(frameType=1, securityEnabled=0, framePending=0, acknowledgeRequest=0, intraPAN=0, destinationAddressingMode=0, sourceAddressingMode=0):
+def make_FCF(frameType=1, securityEnabled=0, framePending=0, acknowledgeRequest=0, intraPAN=0, destinationAddressingMode=2, sourceAddressingMode=2):
     """
     Build the FCF for the 802_15_4 packet
 
