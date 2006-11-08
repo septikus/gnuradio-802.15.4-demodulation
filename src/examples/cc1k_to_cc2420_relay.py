@@ -172,7 +172,7 @@ class transmit_path(gr.flow_graph):
         """
         Send a packet with a predetermined sequence number and from/to address.
         """
-        return self.packet_transmitter.send_pkt(0xe5, struct.pack("HHHH", 0xFFFF, 0xFFFF, 0x10, 0x10), payload, eof)
+        return self.packet_transmitter.send_pkt(0xe5, struct.pack("HHHH", 0xFFFF, 0xFFFF, 0xa, 0xa), payload, eof)
 
     def send_pkt(self, seqno, address, payload='', eof=False):
         return self.packet_transmitter.send_pkt(seqno, address, payload, eof)
@@ -187,24 +187,26 @@ def main ():
             #we have to fake this since it doesn't exist in cc1k
             pktno = st.nright % 256
 
-            print "ok = %5r  pktno = %4d  len(payload) = %4d  %d/%d" % (ok, pktno, len(payload),
-                                                                        st.nright, st.npkts)
+            #print "ok = %5r  pktno = %4d  len(payload) = %4d  %d/%d" % (ok, pktno, len(payload),
+                                                                       # st.nright, st.npkts)
+            print "Received message on CC1K from ",src_addr
             print "  payload: " + str(map(hex, map(ord, payload)))
+            
 
-            addressInfo = struct.pack("HH", dst_addr, src_addr)
-            sosHdr = chr(module_dst)+chr(module_src)+chr(msg_type)
+            addressInfo = struct.pack("HHHH", dst_addr, dst_addr, src_addr, src_addr)
+            sosHdr = chr(am_group)+chr(module_dst)+chr(module_src)+struct.pack("HH", dst_addr, src_addr)+chr(msg_type)+chr(0x1)
             print "\nRetransmit "
-            fgtx.send_pkt(pktno, chr(0)+addressInfo, ''.join((sosHdr, payload)))
+            fgtx.send_pkt(pktno, addressInfo, ''.join((sosHdr, payload)))
             print " ------------------------"
 
 
     parser = OptionParser (option_class=eng_option)
-    parser.add_option("-R", "--rx-subdev-spec", type="subdev", default=None,
+    parser.add_option("-R", "--rx-subdev-spec", type="subdev", default="B",
                       help="select USRP Rx side A or B (default=first one with a daughterboard)")
-    parser.add_option("-T", "--tx-subdev-spec", type="subdev", default=None,
+    parser.add_option("-T", "--tx-subdev-spec", type="subdev", default="A",
                       help="select USRP Tx side A or B (default=first one with a daughterboard)")
 
-    parser.add_option ("-t", "--cordic-freq-tx", type="eng_float", default=2415000000,
+    parser.add_option ("-t", "--cordic-freq-tx", type="eng_float", default=2480000000,
                        help="set Tx cordic frequency to FREQ", metavar="FREQ")
 
     parser.add_option ("-c", "--cordic-freq-rx", type="eng_float", default=434845200,

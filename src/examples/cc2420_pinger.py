@@ -79,7 +79,7 @@ class transmit_path(gr.flow_graph):
     def __init__(self, options):
         gr.flow_graph.__init__(self)
         self.normal_gain = 8000
-
+        self.pktno = 0
         self.u = usrp.sink_c()
         dac_rate = self.u.dac_rate();
         self._data_rate = 2000000
@@ -120,29 +120,29 @@ class transmit_path(gr.flow_graph):
         return self.subdev.set_auto_tr(enable)
         
     def send_pkt(self, payload='', eof=False):
-        return self.packet_transmitter.send_pkt(0xe5, struct.pack("HHHH", 0xFFFF, 0xFFFF, 0x10, 0x10), payload, eof)
+        self.pktno += 1
+        return self.packet_transmitter.send_pkt(self.pktno%256, struct.pack("HHHH", 0xFFFF, 0xFFFF, 0xa, 0xa), payload, eof)
 
 
 
 def main ():
 
     def rx_callback(ok, payload):
-        st.npkts += 1
-        if ok:
-            st.nright += 1
+        if ok and payload[7] != chr(0xa):
+            print "Received PONG from %d, msg %s"%(ord(payload[7]), str(map(hex, map(ord, payload[-2]))))
 
-        (pktno,) = struct.unpack('!H', payload[0:2])
-        print "ok = %5r  pktno = %4d  len(payload) = %4d  %d/%d" % (ok, pktno, len(payload),
-                                                                    st.nright, st.npkts)
-        print "  payload: " + str(map(hex, map(ord, payload)))
-        print " ------------------------"
+            (pktno,) = struct.unpack('!H', payload[0:2])
+            #print "ok = %5r  pktno = %4d  len(payload) = %4d  %d/%d" % (ok, pktno, len(payload),
+                                                                        #st.nright, st.npkts)
+            #print "  payload: " + str(map(hex, map(ord, payload)))
+            print " ------------------------"
         sys.stdout.flush()
 
         
     parser = OptionParser (option_class=eng_option)
-    parser.add_option("-R", "--rx-subdev-spec", type="subdev", default=None,
+    parser.add_option("-R", "--rx-subdev-spec", type="subdev", default="A",
                       help="select USRP Rx side A or B (default=first one with a daughterboard)")
-    parser.add_option("-T", "--tx-subdev-spec", type="subdev", default=None,
+    parser.add_option("-T", "--tx-subdev-spec", type="subdev", default="A",
                       help="select USRP Tx side A or B (default=first one with a daughterboard)")
     parser.add_option ("-c", "--cordic-freq", type="eng_float", default=2480000000,
                        help="set rx cordic frequency to FREQ", metavar="FREQ")
@@ -161,6 +161,14 @@ def main ():
     fg.start()
     tx = transmit_path(options)
     tx.start()
+
+    for i in range(100000):
+        print "send message %d:"%(i+1,)
+        tx.send_pkt(struct.pack('10B', 0x1, 0x80, 0x80, 0xff, 0xff, 0xa, 0x0, 0x20, 0x1, i%256))
+#this is an other example packet we could send.
+        #fg.send_pkt(struct.pack('BBBBBBBBBBBBBBBBBBBBBBBBBBB', 0x1, 0x8d, 0x8d, 0xff, 0xff, 0xbd, 0x0, 0x22, 0x12, 0xbd, 0x0, 0x1, 0x0, 0xff, 0xff, 0x8e, 0xff, 0xff, 0x0, 0x3, 0x3, 0xbd, 0x0, 0x1, 0x0, 0x0, 0x0))
+        time.sleep(1)
+
 
     fg.wait()
 

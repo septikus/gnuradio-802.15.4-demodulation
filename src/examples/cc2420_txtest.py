@@ -82,7 +82,7 @@ def main ():
                       help="select USRP Rx side A or B (default=first one with a daughterboard)")
     parser.add_option("-T", "--tx-subdev-spec", type="subdev", default=None,
                       help="select USRP Tx side A or B (default=first one with a daughterboard)")
-    parser.add_option ("-c", "--cordic-freq", type="eng_float", default=2415000000,
+    parser.add_option ("-c", "--cordic-freq", type="eng_float", default=2475000000,
                        help="set Tx cordic frequency to FREQ", metavar="FREQ")
     parser.add_option ("-r", "--data-rate", type="eng_float", default=2000000)
     parser.add_option ("-f", "--filename", type="string",
@@ -99,6 +99,7 @@ def main ():
     for i in range(10):
         print "send message %d:"%(i+1,)
         fg.send_pkt(struct.pack('9B', 0x1, 0x80, 0x80, 0xff, 0xff, 0x10, 0x0, 0x20, 0x0))
+        fg.send_pkt(struct.pack('21B', 0x1, 0x88, 0xd1, 0xff, 0xff, 0xff, 0xff, 0x6, 0x0, 0x6, 0x0, 0x1, 0x80, 0x80, 0xff, 0xff, 0x6, 0x0, 0x20, 0x1, 0x9b))
         #this is an other example packet we could send.
         #fg.send_pkt(struct.pack('BBBBBBBBBBBBBBBBBBBBBBBBBBB', 0x1, 0x8d, 0x8d, 0xff, 0xff, 0xbd, 0x0, 0x22, 0x12, 0xbd, 0x0, 0x1, 0x0, 0xff, 0xff, 0x8e, 0xff, 0xff, 0x0, 0x3, 0x3, 0xbd, 0x0, 0x1, 0x0, 0x0, 0x0))
         time.sleep(1)

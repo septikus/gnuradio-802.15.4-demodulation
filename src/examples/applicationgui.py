@@ -26,6 +26,12 @@ class MainWindow(wx.Frame):
         self.b5 = wx.Button(self, -1, "CC1K To CC2420")
         self.Bind(wx.EVT_BUTTON, self.OnBCC1KCC2420, self.b5)
         self.buttonSizer.Add(self.b5, 1, wx.EXPAND)
+        self.b5b = wx.Button(self, -1, "Multichannel RX")
+        self.Bind(wx.EVT_BUTTON, self.OnBMulti, self.b5b)
+        self.buttonSizer.Add(self.b5b, 1, wx.EXPAND)
+        self.b6 = wx.Button(self, -1, "Stop")
+        self.Bind(wx.EVT_BUTTON, self.OnBStop, self.b6)
+        self.buttonSizer.Add(self.b6, 1, wx.EXPAND)
 
         self.sizer.Add(self.buttonSizer, 0, wx.EXPAND)
         self.control = wx.TextCtrl(self,1,style=wx.TE_MULTILINE)
@@ -47,11 +53,36 @@ class MainWindow(wx.Frame):
             os.kill(self.cpid, signal.SIGKILL)
         self.cpid = os.spawnl(os.P_NOWAIT, "cc1k_ponger.py")
     def OnBCC2420Ping(self, evt):
+        self.control.AppendText("Starting CC2420 Pinger\n")
+        print self.cpid
+        if self.cpid > 0:
+            os.kill(self.cpid, signal.SIGKILL)
+        self.cpid = os.spawnl(os.P_NOWAIT, "cc2420_pinger.py")
         pass
     def OnBCC2420Pong(self, evt):
+        self.control.AppendText("Starting CC2420 Ponger\n")
+        print self.cpid
+        if self.cpid > 0:
+            os.kill(self.cpid, signal.SIGKILL)
+        self.cpid = os.spawnl(os.P_NOWAIT, "cc2420_ponger.py")
         pass
     def OnBCC1KCC2420(self, evt):
-        pass
+        self.control.AppendText("Starting CC1K to CC2420 Relay\n")
+        if self.cpid > 0:
+            os.kill(self.cpid, signal.SIGKILL)
+        self.cpid = os.spawnl(os.P_NOWAIT, "cc1k_to_cc2420_relay.py")
+
+    def OnBMulti(self, evt):
+        self.control.AppendText("Starting Multichannel Receiver\n")
+        if self.cpid > 0:
+            os.kill(self.cpid, signal.SIGKILL)
+        self.cpid = os.spawnl(os.P_NOWAIT, "cc1k_multichannelrx.py")
+        
+    def OnBStop(self, evt):
+        self.control.AppendText("Stopped\n")
+        if self.cpid > 0:
+            os.kill(self.cpid, signal.SIGKILL)
+            self.cpid = -1
 
 app = wx.PySimpleApp()
 frame=MainWindow(None,-1,'SDR Applications Demo')
