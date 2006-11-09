@@ -121,21 +121,21 @@ class transmit_path(gr.flow_graph):
         
     def send_pkt(self, payload='', eof=False):
         self.pktno += 1
-        return self.packet_transmitter.send_pkt(self.pktno%256, struct.pack("HHHH", 0xFFFF, 0xFFFF, 0xa, 0xa), payload, eof)
+        return self.packet_transmitter.send_pkt(self.pktno%256, struct.pack("HHHH", 0xFFFF, 0xFFFF, 0xb, 0xb), payload, eof)
 
 
 
 def main ():
 
     def rx_callback(ok, payload):
-        if ok and payload[7] != chr(0xa):
+        if ok and payload[7] != chr(0xb):
             print "Received PING from %d, msg %s"%(ord(payload[7]), str(map(hex, map(ord, payload[-2]))))
 
             (pktno,) = struct.unpack('!H', payload[0:2])
             #print "ok = %5r  pktno = %4d  len(payload) = %4d  %d/%d" % (ok, pktno, len(payload),
                                                                         #st.nright, st.npkts)
             #print "  payload: " + str(map(hex, map(ord, payload)))
-            tx.send_pkt(struct.pack('10B', 0x1, 0x80, 0x80, 0xff, 0xff, 0xa, 0x0, 0x20, 0x1, ord(payload[-2])))
+            tx.send_pkt(struct.pack('10B', 0x1, 0x80, 0x80, 0xff, 0xff, 0xb, 0x0, 0x20, 0x1, ord(payload[-2])))
             print " ------------------------"
         sys.stdout.flush()
 
