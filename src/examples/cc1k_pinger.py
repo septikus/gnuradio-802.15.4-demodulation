@@ -297,7 +297,7 @@ def main ():
         tsent = time.time()
         tx.send_pkt(struct.pack('B', (i+1)%256))
 
-        time.sleep(0.01)
+        time.sleep(0.05)
 
 
     
