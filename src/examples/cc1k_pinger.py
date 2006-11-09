@@ -236,13 +236,15 @@ class fsk_rx_graph (gr.flow_graph):
 def rx_callback(ok, am_group, src_addr, dst_addr, module_src, module_dst, msg_type, msg_payload, crc):
     if module_src == 128 and src_addr != 10:
         if ok:
-
+            treceived = time.time()
             print "Received PONG from %d, msg: %s!"%(src_addr, str(map(hex, map(ord, msg_payload))))
+            print "RTT: ", treceived-tsent
         else:
             print "Received bad packet."
         print " ------------------------"
 
 def main ():
+    global tsent, treceived
     tx = transmit_path()
     rx = fsk_rx_graph(rx_callback)
     rx.start()
@@ -250,9 +252,10 @@ def main ():
 
     for i in range(10000):
         print "send message %d:"%(i+1,)
+        tsent = time.time()
         tx.send_pkt(struct.pack('B', (i+1)%256))
 
-        time.sleep(1)
+        time.sleep(0.01)
 
 
     

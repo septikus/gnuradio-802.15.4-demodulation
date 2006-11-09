@@ -121,16 +121,18 @@ class transmit_path(gr.flow_graph):
         
     def send_pkt(self, payload='', eof=False):
         self.pktno += 1
-        return self.packet_transmitter.send_pkt(self.pktno%256, struct.pack("HHHH", 0xFFFF, 0xFFFF, 0xb , 0xb), payload, eof)
+        return self.packet_transmitter.send_pkt(self.pktno%256, struct.pack("HHHH", 0xFFFF, 0xFFFF, 0xa , 0xa), payload, eof)
 
 
 
 def main ():
-
+    global tsent, treceived
+    
     def rx_callback(ok, payload):
         if ok and payload[7] != chr(0xa):
+            treceived = time.time()
             print "Received PONG from %d, msg %s"%(ord(payload[7]), str(map(hex, map(ord, payload[-2]))))
-
+            print "RTT: ", treceived - tsent
             (pktno,) = struct.unpack('!H', payload[0:2])
             #print "ok = %5r  pktno = %4d  len(payload) = %4d  %d/%d" % (ok, pktno, len(payload),
                                                                         #st.nright, st.npkts)
@@ -164,10 +166,11 @@ def main ():
 
     for i in range(100000):
         print "send message %d:"%(i+1,)
+        tsent = time.time()
         tx.send_pkt(struct.pack('10B', 0x1, 0x80, 0x80, 0xff, 0xff, 0xa, 0x0, 0x20, 0x1, i%256))
 #this is an other example packet we could send.
         #fg.send_pkt(struct.pack('BBBBBBBBBBBBBBBBBBBBBBBBBBB', 0x1, 0x8d, 0x8d, 0xff, 0xff, 0xbd, 0x0, 0x22, 0x12, 0xbd, 0x0, 0x1, 0x0, 0xff, 0xff, 0x8e, 0xff, 0xff, 0x0, 0x3, 0x3, 0xbd, 0x0, 0x1, 0x0, 0x0, 0x0))
-        time.sleep(1)
+        time.sleep(0.05)
 
 
     fg.wait()
