@@ -82,10 +82,30 @@ class transmit_path(gr.flow_graph):
         parser.add_option ("-g", "--gain", type="eng_float", default=0,
                            help="set Rx PGA gain in dB [0,20]")
         parser.add_option ("-N", "--no-gui", action="store_true", default=False)
+        parser.add_option("", "--real-time", action="store_true", default=False,
+                          help="Attempt to enable real-time scheduling")
 
         (options, args) = parser.parse_args ()
         print "cordic_freq = %s" % (eng_notation.num_to_str (options.cordic_freq))
 
+        if not options.real_time:
+            realtime = False
+        else:
+            # Attempt to enable realtime scheduling
+            r = gr.enable_realtime_scheduling()
+            print "enabling real time"
+            if r == gr.RT_OK:
+                realtime = True
+            else:
+                realtime = False
+                print "Note: failed to enable realtime scheduling"
+
+        if realtime:                        # be more aggressive
+            options.fusb_block_size = gr.prefs().get_long('fusb', 'rt_block_size', 512)
+            options.fusb_nblocks    = gr.prefs().get_long('fusb', 'rt_nblocks', 1)
+        else:
+            options.fusb_block_size = gr.prefs().get_long('fusb', 'block_size', 4096)
+            options.fusb_nblocks    = gr.prefs().get_long('fusb', 'nblocks', 16)
         # ----------------------------------------------------------------
 
         self.data_rate = options.data_rate
@@ -100,7 +120,8 @@ class transmit_path(gr.flow_graph):
         gr.flow_graph.__init__(self)
         self.normal_gain = 8000
 
-        self.u = usrp.sink_c(0 )
+        self.u = usrp.sink_c(fusb_block_size=options.fusb_block_size,
+                               fusb_nblocks=options.fusb_nblocks )
         dac_rate = self.u.dac_rate();
 
         self.interp = int(128e6 / self.samples_per_symbol / self.data_rate)
@@ -168,10 +189,30 @@ class fsk_rx_graph (gr.flow_graph):
         parser.add_option ("-g", "--gain", type="eng_float", default=0,
                            help="set Rx PGA gain in dB [0,20]")
         parser.add_option ("-N", "--no-gui", action="store_true", default=False)
+        parser.add_option("", "--real-time", action="store_true", default=False,
+                          help="Attempt to enable real-time scheduling")
 
         (options, args) = parser.parse_args ()
         print "cordic_freq = %s" % (eng_notation.num_to_str (options.cordic_freq))
 
+        if not options.real_time:
+            realtime = False
+        else:
+            # Attempt to enable realtime scheduling
+            r = gr.enable_realtime_scheduling()
+            print "enabling real time"
+            if r == gr.RT_OK:
+                realtime = True
+            else:
+                realtime = False
+                print "Note: failed to enable realtime scheduling"
+
+        if realtime:                        # be more aggressive
+            options.fusb_block_size = gr.prefs().get_long('fusb', 'rt_block_size', 512)
+            options.fusb_nblocks    = gr.prefs().get_long('fusb', 'rt_nblocks', 1)
+        else:
+            options.fusb_block_size = gr.prefs().get_long('fusb', 'block_size', 4096)
+            options.fusb_nblocks    = gr.prefs().get_long('fusb', 'nblocks', 16)
         # ----------------------------------------------------------------
 
         self.data_rate = options.data_rate
@@ -187,7 +228,8 @@ class fsk_rx_graph (gr.flow_graph):
 
         max_deviation = self.data_rate / 4
     
-        u = usrp.source_c (0, self.usrp_decim)
+        u = usrp.source_c (0, self.usrp_decim, fusb_block_size=options.fusb_block_size,
+                               fusb_nblocks=options.fusb_nblocks)
         if options.rx_subdev_spec is None:
             options.rx_subdev_spec = pick_subdevice(u)
         u.set_mux(usrp.determine_rx_mux_value(u, options.rx_subdev_spec))
