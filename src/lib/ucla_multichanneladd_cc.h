@@ -34,7 +34,7 @@
 class ucla_multichanneladd_cc;
 typedef boost::shared_ptr<ucla_multichanneladd_cc> ucla_multichanneladd_cc_sptr;
 
-ucla_multichanneladd_cc_sptr gr_make_multichanneladd_cc (size_t itemsize);
+ucla_multichanneladd_cc_sptr ucla_make_multichanneladd_cc (size_t itemsize);
 
 /*!
  * \brief multichanneladd_cc N inputs to a single output
