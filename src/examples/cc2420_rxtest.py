@@ -3,7 +3,7 @@
 #
 # Decoder of IEEE 802.15.4 RADIO Packets.
 #
-# Modified by: Thomas Schmid
+# Modified by: Thomas Schmid, Leslie Choong, Mikhail Tadjikov
 #
   
 from gnuradio import gr, eng_notation
@@ -33,9 +33,9 @@ class stats(object):
         self.nright = 0
         
     
-class oqpsk_rx_graph (gr.flow_graph):
+class oqpsk_rx_graph (gr.top_block):
     def __init__(self, options, rx_callback):
-        gr.flow_graph.__init__(self)
+        gr.top_block.__init__(self)
         print "cordic_freq = %s" % (eng_notation.num_to_str (options.cordic_freq))
 
 
@@ -106,10 +106,10 @@ def main ():
 
     st = stats()
 
-    fg = oqpsk_rx_graph(options, rx_callback)
-    fg.start()
+    tb = oqpsk_rx_graph(options, rx_callback)
+    tb.start()
 
-    fg.wait()
+    tb.wait()
 
 if __name__ == '__main__':
     # insert this in your test code...

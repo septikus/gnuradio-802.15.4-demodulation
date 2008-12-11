@@ -21,7 +21,7 @@
 
 # This is derived from gmsk2_pkt.py.
 #
-# Modified by: Thomas Schmid
+# Modified by: Thomas Schmid, Leslie Choong
 #
 
 from math import pi
@@ -33,6 +33,8 @@ import crc16
 import gnuradio.gr.gr_threading as _threading
 import ieee802_15_4
 import struct
+
+#import pdb
 
 MAX_PKT_SIZE = 128
 
@@ -136,34 +138,34 @@ def make_FCF(frameType=1, securityEnabled=0, framePending=0, acknowledgeRequest=
                        + (sourceAddressingMode << 14))
     
 
-class ieee802_15_4_mod_pkts(gr.hier_block):
+class ieee802_15_4_mod_pkts(gr.hier_block2):
     """
     IEEE 802.15.4 modulator that is a GNU Radio source.
 
     Send packets by calling send_pkt
     """
-    def __init__(self, fg, msgq_limit=2, pad_for_usrp=True, *args, **kwargs):
+    def __init__(self, msgq_limit=2, pad_for_usrp=True, *args, **kwargs):
         """
 	Hierarchical block for the 802_15_4 O-QPSK  modulation.
 
         Packets to be sent are enqueued by calling send_pkt.
         The output is the complex modulated signal at baseband.
 
-	@param fg: flow graph
-	@type fg: flow graph
         @param msgq_limit: maximum number of messages in message queue
         @type msgq_limit: int
         @param pad_for_usrp: If true, packets are padded such that they end up a multiple of 128 samples
 
         See 802_15_4_mod for remaining parameters
         """
+	gr.hier_block2.__init__(self, "ieee802_15_4_mod_pkts",
+				gr.io_signature(0, 0, 0),  # Input
+				gr.io_signature(0, 0, 0))  # Output
         self.pad_for_usrp = pad_for_usrp
 
         # accepts messages from the outside world
         self.pkt_input = gr.message_source(gr.sizeof_char, msgq_limit)
-        self.ieee802_15_4_mod = ieee802_15_4.ieee802_15_4_mod(fg, *args, **kwargs)
-        fg.connect(self.pkt_input, self.ieee802_15_4_mod)
-        gr.hier_block.__init__(self, fg, None, self.ieee802_15_4_mod)
+        self.ieee802_15_4_mod = ieee802_15_4.ieee802_15_4_mod(self, *args, **kwargs)
+        self.connect(self.pkt_input, self.ieee802_15_4_mod)
 
     def send_pkt(self, seqNr, addressInfo, payload='', eof=False):
         """
@@ -192,7 +194,7 @@ class ieee802_15_4_mod_pkts(gr.hier_block):
         self.pkt_input.msgq().insert_tail(msg)
 
 
-class ieee802_15_4_demod_pkts(gr.hier_block):
+class ieee802_15_4_demod_pkts(gr.hier_block2):
     """
     802_15_4 demodulator that is a GNU Radio sink.
 
@@ -200,15 +202,13 @@ class ieee802_15_4_demod_pkts(gr.hier_block):
     app via the callback.
     """
 
-    def __init__(self, fg, callback=None, threshold=-1, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
 	Hierarchical block for O-QPSK demodulation.
 
 	The input is the complex modulated signal at baseband.
         Demodulated packets are sent to the handler.
 
-	@param fg: flow graph
-	@type fg: flow graph
         @param callback:  function of two args: ok, payload
         @type callback: ok: bool; payload: string
         @param threshold: detect access_code with up to threshold bits wrong (-1 -> use default)
@@ -216,15 +216,23 @@ class ieee802_15_4_demod_pkts(gr.hier_block):
 
         See ieee802_15_4_demod for remaining parameters.
 	"""
+	try:
+		self.callback = kwargs.pop('callback')
+		self.threshold = kwargs.pop('threshold')
+	except KeyError:
+		pass
+
+	gr.hier_block2.__init__(self, "ieee802_15_4_demod_pkts",
+				gr.io_signature(1, 1, gr.sizeof_gr_complex),  # Input
+				gr.io_signature(0, 0, 0))  # Output
 
         self._rcvd_pktq = gr.msg_queue()          # holds packets from the PHY
-        self.ieee802_15_4_demod = ieee802_15_4.ieee802_15_4_demod(fg, *args, **kwargs)
-        self._packet_sink = ucla.ieee802_15_4_packet_sink(self._rcvd_pktq, threshold)
-        
-        fg.connect(self.ieee802_15_4_demod, self._packet_sink)
+        self.ieee802_15_4_demod = ieee802_15_4.ieee802_15_4_demod(self, *args, **kwargs)
+        self._packet_sink = ucla.ieee802_15_4_packet_sink(self._rcvd_pktq, self.threshold)
+
+        self.connect(self,self.ieee802_15_4_demod, self._packet_sink)
       
-        gr.hier_block.__init__(self, fg, self.ieee802_15_4_demod, None)
-        self._watcher = _queue_watcher_thread(self._rcvd_pktq, callback)
+        self._watcher = _queue_watcher_thread(self._rcvd_pktq, self.callback)
 
     def carrier_sensed(self):
         """
@@ -244,17 +252,17 @@ class _queue_watcher_thread(_threading.Thread):
 
     def run(self):
         while self.keep_running:
-            #print "802_15_4_pkt: waiting for packet"
+            print "802_15_4_pkt: waiting for packet"
             msg = self.rcvd_pktq.delete_head()
             ok = 0
             payload = msg.to_string()
             
-            #print "received packet "
+            print "received packet "
 	    crc = crc16.CRC16()
 	    crc.update(payload[:-2])
 
 	    crc_check = crc.intchecksum()
-	    #print "checksum: %s, received: %s"%(crc_check, str(ord(payload[-2]) + ord(payload[-1])*256))
+	    print "checksum: %s, received: %s"%(crc_check, str(ord(payload[-2]) + ord(payload[-1])*256))
 	    if len(payload) > 2:
                 ok = (crc_check == ord(payload[-2]) + ord(payload[-1])*256)
             msg_payload = payload

@@ -25,26 +25,28 @@
 
 # Derived from gmsk.py
 #
-# Modified by: Thomas Schmid
+# Modified by: Thomas Schmid, Leslie Choong
 #
 
 from gnuradio import gr, ucla
 from math import pi
 
-class ieee802_15_4_mod(gr.hier_block):
+class ieee802_15_4_mod(gr.hier_block2):
 
-    def __init__(self, fg, spb = 2):
+    def __init__(self, spb = 2):
         """
 	Hierarchical block for cc1k FSK modulation.
 
 	The input is a byte stream (unsigned char) and the
 	output is the complex modulated signal at baseband.
 
-	@param fg: flow graph
-	@type fg: flow graph
 	@param spb: samples per baud >= 2
 	@type spb: integer
 	"""
+	gr.hier_block2.__init__(self, "ieee802_15_4_mod",
+				gr.io_signature(0, 0, 0),  # Input
+				gr.io_signature(0, 0, 0))  # Output
+
         if not isinstance(spb, int) or spb < 2:
             raise TypeError, "sbp must be an integer >= 2"
         self.spb = spb
@@ -58,15 +60,11 @@ class ieee802_15_4_mod(gr.hier_block):
 
 
 	# Connect
-	fg.connect(self.symbolsToChips, self.chipsToSymbols,
+	self.connect(self.symbolsToChips, self.chipsToSymbols,
                    self.symbolsToConstellation, self.pskmod, self.delay)
 
-	# Initialize base class
-	gr.hier_block.__init__(self, fg, self.symbolsToChips, self.delay)
-
-
-class ieee802_15_4_demod(gr.hier_block):
-    def __init__(self, fg, sps = 2, symbol_rate = 2000000):
+class ieee802_15_4_demod(gr.hier_block2):
+    def __init__(self, *args, **kwargs):
         """
         Hierarchical block for O-QPSK demodulation.
         
@@ -80,25 +78,34 @@ class ieee802_15_4_demod(gr.hier_block):
         @param symbol_rate: symbols per second
         @type symbol_rate: float
         """
+	try:
+		self.sps = kwargs.pop('sps')
+		self.symbol_rate = kwargs.pop('symbol_rate')
+	except KeyError:
+		pass
+
+	gr.hier_block2.__init__(self, "ieee802_15_4_demod",
+				gr.io_signature(1, 1, gr.sizeof_gr_complex),  # Input
+				gr.io_signature(1, 1, gr.sizeof_float))  # Output
         
         # Demodulate FM
-        sensitivity = (pi / 2) / sps
+        sensitivity = (pi / 2) / self.sps
         #self.fmdemod = gr.quadrature_demod_cf(1.0 / sensitivity)
         self.fmdemod = gr.quadrature_demod_cf(1)
         
         # Low pass the output of fmdemod to allow us to remove
         # the DC offset resulting from frequency offset
         
-        alpha = 0.0008/sps
+        alpha = 0.0008/self.sps
         self.freq_offset = gr.single_pole_iir_filter_ff(alpha)
         self.sub = gr.sub_ff()
-        
-        fg.connect(self.fmdemod, (self.sub, 0))
-        fg.connect(self.fmdemod, self.freq_offset, (self.sub, 1))
+        self.connect(self, self.fmdemod)
+        self.connect(self.fmdemod, (self.sub, 0))
+        self.connect(self.fmdemod, self.freq_offset, (self.sub, 1))
         
         
         # recover the clock
-        omega = sps
+        omega = self.sps
         gain_mu=0.03
         mu=0.5
         omega_relative_limit=0.0002
@@ -109,9 +116,5 @@ class ieee802_15_4_demod(gr.hier_block):
                                                       omega_relative_limit)
         
         # Connect
-        fg.connect(self.sub, self.clock_recovery)
+        self.connect(self.sub, self.clock_recovery, self)
         
-        # Initialize base class
-        gr.hier_block.__init__(self, fg, self.fmdemod, self.clock_recovery)
-        
-

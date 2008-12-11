@@ -23,7 +23,7 @@
 /*
  * ucla_ieee802_15_4_packet_sink.cc has been derived from gr_packet_sink.cc
  *
- * Modified by: Thomas Schmid
+ * Modified by: Thomas Schmid, Leslie Choong
  */
 
 #ifdef HAVE_CONFIG_H
@@ -137,7 +137,7 @@ ucla_make_ieee802_15_4_packet_sink (gr_msg_queue_sptr target_queue,
 
 
 ucla_ieee802_15_4_packet_sink::ucla_ieee802_15_4_packet_sink (gr_msg_queue_sptr target_queue, int threshold)
-  : gr_sync_block ("sos_packet_sink",
+  : gr_sync_block ("ucla_ieee802_15_4_packet_sink",
 		   gr_make_io_signature (1, 1, sizeof(float)),
 		   gr_make_io_signature (0, 0, 0)),
     d_target_queue(target_queue), 
@@ -147,7 +147,7 @@ ucla_ieee802_15_4_packet_sink::ucla_ieee802_15_4_packet_sink (gr_msg_queue_sptr 
   d_processed = 0;
 
   if ( VERBOSE )
-    fprintf(stderr, "syncvec: %x, threshold: %d\n", d_sync_vector, d_threshold),fflush(stderr);
+    fprintf(stderr, "syncvec: %x, threshold: %d, sizeof(Float): %d\n", d_sync_vector, d_threshold, sizeof(float)),fflush(stderr);
   enter_search();
 }
 

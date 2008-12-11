@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of the University of California.
+# Copyright (c) 2006, 2008 The Regents of the University of California.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@ To build the examples from the tarball use the normal recipe:
   $ ./configure
   $ make
   $ make check
+  $ sudo make install
 
 If you're building from CVS, you'll need to use this sequence, since
 CVS doesn't contain configure or the generated Makefiles.
@@ -45,6 +46,7 @@ CVS doesn't contain configure or the generated Makefiles.
   $ ./configure
   $ make
   $ make check
+  $ sudo make install
 
 
 The doc directory is not built by default.  This is to avoid spurious
