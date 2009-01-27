@@ -10,6 +10,7 @@
 #include <gr_io_signature.h>
 #include <assert.h>
 #include <iostream>
+#include <cstring>
 
 ucla_manchester_ff_sptr
 ucla_make_manchester_ff ()

@@ -33,6 +33,7 @@
 #include <ucla_ieee802_15_4_packet_sink.h>
 #include <gr_io_signature.h>
 #include <cstdio>
+#include <cstring>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>

@@ -40,6 +40,7 @@
 #include <assert.h>
 #include <stdexcept>
 #include <gr_count_bits.h>
+#include <cstring>
 
 /*
  * Create a new instance of cc1k_correlator_cb and return

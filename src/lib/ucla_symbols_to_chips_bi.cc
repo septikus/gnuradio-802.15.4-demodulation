@@ -30,6 +30,7 @@
 #include <gr_io_signature.h>
 #include <assert.h>
 #include <iostream>
+#include <cstring>
 
 static const unsigned int d_symbol_table[] = {3653456430,
 					      3986437410,
